@@ -504,3 +504,22 @@ Windows 任务计划每日自动运行脚本 → 无更新静默、有更新自�
 
 ### A4. 决策记录
 D1 保留 GitHub 更新源并指向你自己的仓库（否则官方发版会覆盖本地功能）；D2 源码 + 桌面补丁双维护；D3 仓库路径 `E:\Vibe coding\DeepSeek Harness Studio`；D4 主题进 workspace；D5 推私有远程。详见第 7 章。
+
+---
+
+## 11. 实施进展（2026-02 更新）
+
+### 已完成
+- **阶段 1（单仓库）**：`E:\Vibe coding\DeepSeek Harness Studio` 建立完成——官方 Harness 历史 + 视觉桥接提交（`[local] vision bridge`）+ `desktop/` subtree（官方 dsh-desktop main）+ rebrand 提交 + INTEGRATION.md；三个 remote（upstream / desktop-upstream / origin=你的 GitHub）就位；**首次推送成功**（master = 6f3ee09bd）。
+- **阶段 2（主题内置）**：Aqua 主题 → `desktop/vendor/@deepseek-ai/dsh-client-ui-aqua`（打包资源）+ `packages/client/ui-aqua`（workspace 包）；`desktop/build/dsh-local.patch.yml` 注册；`desktop/src/main/studio-local.ts` 实现首启版本化安装到 `DSH_HOME\profiles\node_modules` + 官方/本地补丁合并；electron-builder extraResources 已配；测试通过。
+- **阶段 3（同步自动化）**：`scripts/sync/sync-upstream.ps1` 完成（通道 A merge / 通道 B subtree pull / 冲突报告 / 功能保护 / 重叠扫描）；**首次真实同步演练通过**（通道 B 58 提交干净合并，0 冲突，rebrand 完好保留）。Windows 任务计划注册待做（可选）。
+- **阶段 4（构建验证）**：**视觉桥接编译修复完成**（api-proxy 结构恢复 + llm-deepseek 类型修复——本地功能此前从未通过编译）；harness 全仓 `build:lib:host` + `typecheck:contracts-ready` 通过；桌面端 typecheck 通过、**63/63 测试通过**；Windows 打包构建进行中。
+- **D8 品牌重命名**已落地（详见第 7 章）。
+
+### 实施中发现的问题与处理（记录）
+1. 本地路径 clone（硬链接）导致对象库隐疾 → push 报 `did not receive expected object` → 从官方 GitHub 重新 clone 重建仓库解决。
+2. 视觉桥接原始改动含**编译错误**（api-proxy.ts 结构破坏 + llm-deepseek 类型错误）→ 已修复，首次成功构建。
+3. 官方 dsh-desktop 默认分支是 `main`（非 master）→ 脚本通道 B 已用 main。
+4. PowerShell 5.1 兼容：stderr 合并、`Set-Content -Encoding`、变量大小写冲突均已在脚本中规避。
+5. desktop 测试被 harness 根 vitest 配置干扰 → 新增 `desktop/vitest.config.ts` 隔离。
+6. rebrand 后 README 下载断言与 GitHub 发布渠道矛盾 → 断言已按 D7 修正。
