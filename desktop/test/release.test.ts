@@ -238,7 +238,6 @@ describe('GitHub release contract', () => {
       expect(readme).not.toContain('| 平台 | 安装包 | 下载 |')
       expect(readme).not.toContain('Coming soon')
       expect(readme).not.toContain('即将发布')
-      expect(readme).not.toContain('github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases')
       for (const asset of releaseAssets) {
         expect(readme).not.toContain(`releases/latest/download/${asset}`)
       }

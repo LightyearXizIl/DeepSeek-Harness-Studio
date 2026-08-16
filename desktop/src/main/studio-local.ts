@@ -69,6 +69,8 @@ export function mergedPatchPath(
   localPatch: string,
   userData: string
 ): string {
+  // No local additions: hand the official patch straight through.
+  if (!existsSync(localPatch)) return officialPatch
   const parts: unknown[] = []
   const push = (file: string): void => {
     if (!existsSync(file)) return
