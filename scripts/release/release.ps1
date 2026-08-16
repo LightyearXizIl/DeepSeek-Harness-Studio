@@ -96,7 +96,9 @@ if (-not $SkipTests) {
   } else {
     Push-Location $Desk
     try {
-      & npm.cmd test 2>&1 | Out-Host
+      # No 2>&1: under Windows PowerShell 5.1 stderr lines would abort with
+      # $ErrorActionPreference=Stop. Let stderr pass through, judge by exit code.
+      & npm.cmd test | Out-Host
       if ($LASTEXITCODE -ne 0) { throw 'desktop tests failed' }
     } finally { Pop-Location }
     Write-OK 'tests passed'
@@ -112,7 +114,8 @@ if ($DryRun) {
     Remove-Item -Force -ErrorAction SilentlyContinue
   Push-Location $Desk
   try {
-    & npm.cmd run package:win 2>&1 | Out-Host
+    # No 2>&1: stderr (e.g. electron-vite warnings) must not abort under PS 5.1.
+    & npm.cmd run package:win | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'package:win failed' }
   } finally { Pop-Location }
   $setup = Get-ChildItem $Dist -Filter "deepseek-harness-studio-$Version-windows-x64-setup.exe" |
