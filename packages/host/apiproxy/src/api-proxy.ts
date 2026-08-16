@@ -12,7 +12,7 @@ import type { Agent, ModelSelection, ModelSelectionRef, AgentOptions, AgentStatu
 import type {} from '@deepseek-ai/dsh-agent-presets/types'
 import { AttachmentError } from '@deepseek-ai/dsh-attachment'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import { contentHasImage, createUserMessage, freezeMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import { createUserMessage, freezeMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import { errorChain } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, MessageSource } from '@deepseek-ai/dsh-llm'
 import { isAppendSurfaceEvent, isJsonValue } from '@deepseek-ai/dsh-session'
@@ -229,11 +229,6 @@ function imageInEvent(event: SessionEvent, match: (ref: ImageAttachmentRef) => b
     return imageBlockIn([data.chunk.block], match)
   }
   return undefined
-}
-
-/** True when the current model-visible surface contains an image. */
-function messagesHaveImage(messages: readonly { content: readonly ContentBlock[] }[]): boolean {
-  return messages.some(message => contentHasImage(message.content))
 }
 
 /** Resolve the first reference matching one opaque id. */
@@ -2023,7 +2018,8 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     return ok(request, namespaceView(descriptor))
   }
 
-  async prompt(request) {
+  return {
+    sessions: {
       // Attached sessions summarize from memory; persisted-but-unattached (cold)
       // sessions merge in from the persistence store so history survives restarts.
       // Logs without a cwd are not served; every session records its project

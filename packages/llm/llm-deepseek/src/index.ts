@@ -297,6 +297,7 @@ export function apply(ctx: Context, config: Config): void {
     let bridged: Message[] | null = null
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i]
+      if (message === undefined) continue
       const content = message.content
       if (!Array.isArray(content) || !content.some(block => block.type === 'image')) continue
       const images = content.filter(block => block.type === 'image')
@@ -304,12 +305,16 @@ export function apply(ctx: Context, config: Config): void {
       const analyses: string[] = []
       for (const image of images) {
         const id = image.attachment?.attachmentId
-        let description = id !== undefined ? visionBridgeCache.get(id) : undefined
-        if (description === undefined) {
-          description = await analyzeImage(image.attachment)
-          if (description === null) {
+        let description: string
+        const cached = id !== undefined ? visionBridgeCache.get(id) : undefined
+        if (cached !== undefined) {
+          description = cached
+        } else {
+          const analyzed = await analyzeImage(image.attachment)
+          if (analyzed === null) {
             throw new LlmError('图片分析失败：视觉模型（智谱 GLM）未能返回描述。', 'UNSUPPORTED_CONTENT')
           }
+          description = analyzed
           if (id !== undefined) visionBridgeCache.set(id, description)
         }
         analyses.push(description)
