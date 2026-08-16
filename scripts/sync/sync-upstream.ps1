@@ -54,7 +54,10 @@ function Is-Protected([string]$path) {
 }
 
 function Invoke-Git([string[]]$arguments) {
-  & git -C $Repo @arguments 2>&1
+  # Do NOT merge stderr (2>&1): under Windows PowerShell 5.1 that turns git's
+  # progress lines into ErrorRecords that abort with $ErrorActionPreference=Stop.
+  # Let stderr pass through to the console and judge success via $LASTEXITCODE.
+  & git -C $Repo @arguments
   return $LASTEXITCODE
 }
 
