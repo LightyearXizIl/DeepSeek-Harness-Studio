@@ -1,0 +1,13 @@
+node_modules/
+out/
+dist/
+dist-dev/
+.DS_Store
+*.log
+coverage/
+build/icon.iconset/
+build/app-icon.iconset/
+build/icon-1024.png
+.env
+.env.*
+!.env.example
