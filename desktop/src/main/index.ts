@@ -13,6 +13,7 @@ import {
 import { HarnessRuntime } from './runtime/harness-runtime'
 import { secureWindow } from './security'
 import { ensureLaunchRoot } from './state/launch-root'
+import { ensureStudioThemeInstalled, mergedPatchPath } from './studio-local'
 import { isAbortedNavigationError, shouldLoadHarnessUrl } from './window-navigation'
 import {
   checkForUpdates,
@@ -330,12 +331,18 @@ async function bootstrap(): Promise<void> {
   launchDirectory = await ensureLaunchRoot(app.getPath('userData'))
   registerUpdateHandlers()
   createWindow()
+  const dshHome = join(app.getPath('userData'), 'harness')
+  await ensureStudioThemeInstalled(dshHome, desktopResourcePath('vendor/@deepseek-ai/dsh-client-ui-aqua'))
   runtime = new HarnessRuntime({
     dshEntryPath: dshEntryPath(),
     nodeExecutablePath: bundledNodePath(),
     nodeEntryPath: harnessNodeEntryPath(),
-    dshPatchPath: desktopResourcePath('deepseek-harness-studio.patch.yml'),
-    dshHome: join(app.getPath('userData'), 'harness'),
+    dshPatchPath: mergedPatchPath(
+      desktopResourcePath('deepseek-harness-studio.patch.yml'),
+      desktopResourcePath('dsh-local.patch.yml'),
+      app.getPath('userData')
+    ),
+    dshHome,
     logPath: join(app.getPath('logs'), 'harness.log'),
     launchProcess: (executablePath, args, options) => spawn(executablePath, args, options),
     onChanged: (snapshot) => {

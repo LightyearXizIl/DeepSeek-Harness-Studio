@@ -1,0 +1,6 @@
+﻿# DeepSeek Harness Studio local composition additions.
+# This file is local-only: upstream dsh-desktop never touches it, so subtree
+# pulls cannot conflict with it.
+- insert:
+    - id: ui-aqua
+      name: '@deepseek-ai/dsh-client-ui-aqua'

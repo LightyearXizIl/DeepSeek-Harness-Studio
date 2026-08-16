@@ -109,6 +109,14 @@
         "to": "deepseek-harness-studio.patch.yml"
       },
       {
+        "from": "build/dsh-local.patch.yml",
+        "to": "dsh-local.patch.yml"
+      },
+      {
+        "from": "vendor/@deepseek-ai/dsh-client-ui-aqua",
+        "to": "vendor/@deepseek-ai/dsh-client-ui-aqua"
+      },
+      {
         "from": "build/splash.html",
         "to": "splash.html"
       }
