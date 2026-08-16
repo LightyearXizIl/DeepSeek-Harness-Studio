@@ -15,7 +15,7 @@ module.exports = {
   },
   nsis: {
     ...packageJson.build.nsis,
-    artifactName: 'deepseek-harness-studio-dev-windows-${arch}-setup.${ext}'
+    artifactName: 'deepseek-harness-studio-${version}-dev-windows-${arch}-setup.${ext}'
   },
   publish: null
 }

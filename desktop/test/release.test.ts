@@ -5,9 +5,13 @@ import { describe, expect, it } from 'vitest'
 const projectRoot = path.resolve(import.meta.dirname, '..')
 
 const releaseAssets = [
-  'deepseek-harness-studio-mac-arm64.dmg',
-  'deepseek-harness-studio-mac-x64.dmg',
-  'deepseek-harness-studio-windows-x64-setup.exe'
+  'deepseek-harness-studio-${version}-mac-arm64',
+  'deepseek-harness-studio-${version}-mac-x64',
+  'deepseek-harness-studio-*-windows-x64-setup.exe',
+  'deepseek-harness-studio-*-mac-arm64.zip.blockmap',
+  'deepseek-harness-studio-*-mac-x64.zip.blockmap',
+  'deepseek-harness-studio-*-windows-x64-setup.exe.blockmap',
+  'dist-dev/deepseek-harness-studio-*-dev-windows-x64-setup.exe'
 ]
 
 describe('GitHub release contract', () => {
@@ -55,7 +59,9 @@ describe('GitHub release contract', () => {
       }
     }
 
-    expect(packageJson.build.artifactName).toBe('deepseek-harness-studio-${os}-${arch}.${ext}')
+    expect(packageJson.build.artifactName).toBe(
+      'deepseek-harness-studio-${version}-${os}-${arch}.${ext}'
+    )
     expect(packageJson.build.extraResources).toContainEqual({
       from: 'build/app-icon.png',
       to: 'icon.png'
@@ -69,7 +75,7 @@ describe('GitHub release contract', () => {
       to: 'deepseek-harness-studio.patch.yml'
     })
     expect(packageJson.build.nsis.artifactName).toBe(
-      'deepseek-harness-studio-windows-${arch}-setup.${ext}'
+      'deepseek-harness-studio-${version}-windows-${arch}-setup.${ext}'
     )
     expect(packageJson.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }])
     expect(packageJson.build.portable).toBeUndefined()
@@ -117,9 +123,9 @@ describe('GitHub release contract', () => {
       'latest-mac-x64.yml',
       'latest-mac.yml',
       'latest.yml',
-      'deepseek-harness-studio-mac-arm64.zip.blockmap',
-      'deepseek-harness-studio-mac-x64.zip.blockmap',
-      'deepseek-harness-studio-windows-x64-setup.exe.blockmap'
+      'deepseek-harness-studio-*-mac-arm64.zip.blockmap',
+      'deepseek-harness-studio-*-mac-x64.zip.blockmap',
+      'deepseek-harness-studio-*-windows-x64-setup.exe.blockmap'
     ]) {
       expect(workflow).toContain(asset)
     }
@@ -161,7 +167,7 @@ describe('GitHub release contract', () => {
     expect(developmentConfig).toContain("output: 'dist-dev'")
     expect(developmentConfig).toContain("studioChannel: 'development'")
     expect(developmentConfig).toContain(
-      "artifactName: 'deepseek-harness-studio-dev-windows-${arch}-setup.${ext}'"
+      "artifactName: 'deepseek-harness-studio-${version}-dev-windows-${arch}-setup.${ext}'"
     )
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'deepseek-harness-studio-dev'))")
     expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'deepseek-harness-studio'))")
@@ -187,7 +193,7 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('gh release create $env:PRERELEASE_TAG')
     expect(workflow).toContain('--prerelease')
     expect(workflow).toContain('name: windows-x64-dev')
-    expect(workflow).toContain('dist-dev/deepseek-harness-studio-dev-windows-x64-setup.exe')
+    expect(workflow).toContain('dist-dev/deepseek-harness-studio-*-dev-windows-x64-setup.exe')
     for (const asset of releaseAssets) expect(workflow).toContain(asset)
     expect(
       workflow.match(

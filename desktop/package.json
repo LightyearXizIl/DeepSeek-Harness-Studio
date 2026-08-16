@@ -132,7 +132,7 @@
         "repo": "DeepSeek-Harness-Studio"
       }
     ],
-    "artifactName": "deepseek-harness-studio-${os}-${arch}.${ext}",
+    "artifactName": "deepseek-harness-studio-${version}-${os}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icon.icns",
@@ -159,7 +159,7 @@
       ]
     },
     "nsis": {
-      "artifactName": "deepseek-harness-studio-windows-${arch}-setup.${ext}",
+      "artifactName": "deepseek-harness-studio-${version}-windows-${arch}-setup.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,

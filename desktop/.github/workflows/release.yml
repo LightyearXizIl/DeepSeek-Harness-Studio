@@ -90,7 +90,8 @@ jobs:
         env:
           CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
         run: |
-          dmg_path="dist/deepseek-harness-studio-mac-arm64.dmg"
+          version="$(node -p "require('./package.json').version")"
+          dmg_path="dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
           identity="$(security find-identity -v -p codesigning "$CSC_KEYCHAIN" | awk '/Developer ID Application/ { print $2; exit }')"
           test -n "$identity" || { echo "::error::Developer ID Application identity not found"; exit 1; }
           codesign --keychain "$CSC_KEYCHAIN" --sign "$identity" --timestamp --force "$dmg_path"
@@ -122,20 +123,21 @@ jobs:
       - name: Verify signed and notarized Apple Silicon app
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
+          version="$(node -p "require('./package.json').version")"
           app_path="dist/mac-arm64/DeepSeek Harness Studio.app"
           codesign --verify --deep --strict --verbose=2 "$app_path"
           spctl --assess --type execute --verbose=4 "$app_path"
           xcrun stapler validate "$app_path"
-          codesign --verify --verbose=2 dist/deepseek-harness-studio-mac-arm64.dmg
-          spctl --assess --type open --context context:primary-signature --verbose=4 dist/deepseek-harness-studio-mac-arm64.dmg
-          xcrun stapler validate dist/deepseek-harness-studio-mac-arm64.dmg
+          codesign --verify --verbose=2 "dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
+          spctl --assess --type open --context context:primary-signature --verbose=4 "dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
+          xcrun stapler validate "dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
       - uses: actions/upload-artifact@v4
         with:
           name: macos-apple-silicon
           path: |
-            dist/deepseek-harness-studio-mac-arm64.dmg
-            dist/deepseek-harness-studio-mac-arm64.zip
-            dist/deepseek-harness-studio-mac-arm64.zip.blockmap
+            dist/deepseek-harness-studio-*-mac-arm64.dmg
+            dist/deepseek-harness-studio-*-mac-arm64.zip
+            dist/deepseek-harness-studio-*-mac-arm64.zip.blockmap
             dist/latest-mac-arm64.yml
           if-no-files-found: error
 
@@ -208,7 +210,8 @@ jobs:
         env:
           CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
         run: |
-          dmg_path="dist/deepseek-harness-studio-mac-x64.dmg"
+          version="$(node -p "require('./package.json').version")"
+          dmg_path="dist/deepseek-harness-studio-${version}-mac-x64.dmg"
           identity="$(security find-identity -v -p codesigning "$CSC_KEYCHAIN" | awk '/Developer ID Application/ { print $2; exit }')"
           test -n "$identity" || { echo "::error::Developer ID Application identity not found"; exit 1; }
           codesign --keychain "$CSC_KEYCHAIN" --sign "$identity" --timestamp --force "$dmg_path"
@@ -240,20 +243,21 @@ jobs:
       - name: Verify signed and notarized Intel app
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
+          version="$(node -p "require('./package.json').version")"
           app_path="dist/mac/DeepSeek Harness Studio.app"
           codesign --verify --deep --strict --verbose=2 "$app_path"
           spctl --assess --type execute --verbose=4 "$app_path"
           xcrun stapler validate "$app_path"
-          codesign --verify --verbose=2 dist/deepseek-harness-studio-mac-x64.dmg
-          spctl --assess --type open --context context:primary-signature --verbose=4 dist/deepseek-harness-studio-mac-x64.dmg
-          xcrun stapler validate dist/deepseek-harness-studio-mac-x64.dmg
+          codesign --verify --verbose=2 "dist/deepseek-harness-studio-${version}-mac-x64.dmg"
+          spctl --assess --type open --context context:primary-signature --verbose=4 "dist/deepseek-harness-studio-${version}-mac-x64.dmg"
+          xcrun stapler validate "dist/deepseek-harness-studio-${version}-mac-x64.dmg"
       - uses: actions/upload-artifact@v4
         with:
           name: macos-intel
           path: |
-            dist/deepseek-harness-studio-mac-x64.dmg
-            dist/deepseek-harness-studio-mac-x64.zip
-            dist/deepseek-harness-studio-mac-x64.zip.blockmap
+            dist/deepseek-harness-studio-*-mac-x64.dmg
+            dist/deepseek-harness-studio-*-mac-x64.zip
+            dist/deepseek-harness-studio-*-mac-x64.zip.blockmap
             dist/latest-mac-x64.yml
           if-no-files-found: error
 
@@ -334,20 +338,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PRERELEASE_TAG: ${{ inputs.windows_prerelease_tag }}
         run: |
+          $setup = Get-ChildItem 'dist-dev/*dev-windows-x64-setup.exe' | Select-Object -First 1
+          if (-not $setup) { throw 'dev setup not found' }
           gh release create $env:PRERELEASE_TAG `
             --repo $env:GITHUB_REPOSITORY `
             --target $env:GITHUB_SHA `
             --prerelease `
             --title 'DeepSeek Harness Studio Windows Harness Test' `
             --notes "Windows x64 development build for validating the Harness startup fix from PR #39. This build uses an isolated app identity and user data directory, and has passed the packaged Windows Harness smoke test." `
-            'dist-dev/deepseek-harness-studio-dev-windows-x64-setup.exe#DeepSeek Harness Studio Dev Windows x64 Setup'
+            "$($setup.FullName)#DeepSeek Harness Studio Dev Windows x64 Setup"
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: windows-x64
           path: |
-            dist/deepseek-harness-studio-windows-x64-setup.exe
-            dist/deepseek-harness-studio-windows-x64-setup.exe.blockmap
+            dist/deepseek-harness-studio-*-windows-x64-setup.exe
+            dist/deepseek-harness-studio-*-windows-x64-setup.exe.blockmap
             dist/latest.yml
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
@@ -355,8 +361,8 @@ jobs:
         with:
           name: windows-x64-dev
           path: |
-            dist-dev/deepseek-harness-studio-dev-windows-x64-setup.exe
-            dist-dev/deepseek-harness-studio-dev-windows-x64-setup.exe.blockmap
+            dist-dev/deepseek-harness-studio-*-dev-windows-x64-setup.exe
+            dist-dev/deepseek-harness-studio-*-dev-windows-x64-setup.exe.blockmap
             dist-dev/latest.yml
           if-no-files-found: error
 
