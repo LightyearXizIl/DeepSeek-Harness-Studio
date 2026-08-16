@@ -59,13 +59,13 @@ const githubOutput = required('GITHUB_OUTPUT')
 const certificateSource = required('CSC_LINK')
 const certificatePassword = required('CSC_KEY_PASSWORD')
 const token = randomBytes(12).toString('hex')
-const certificatePath = path.join(runnerTemp, `dsh-desktop-signing-${token}.p12`)
+const certificatePath = path.join(runnerTemp, `deepseek-harness-studio-signing-${token}.p12`)
 const intermediateCertificatePath = path.join(
   runnerTemp,
-  `dsh-desktop-developer-id-g2-${token}.cer`
+  `deepseek-harness-studio-developer-id-g2-${token}.cer`
 )
-const keychainPath = path.join(runnerTemp, `dsh-desktop-signing-${token}.keychain-db`)
-const keychainListPath = path.join(runnerTemp, `dsh-desktop-keychains-${token}.txt`)
+const keychainPath = path.join(runnerTemp, `deepseek-harness-studio-signing-${token}.keychain-db`)
+const keychainListPath = path.join(runnerTemp, `deepseek-harness-studio-keychains-${token}.txt`)
 const keychainPassword = randomBytes(32).toString('base64')
 let originalKeychains = []
 

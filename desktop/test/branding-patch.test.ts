@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 
-describe('DSH Desktop sidebar branding', () => {
+describe('DeepSeek Harness Studio sidebar branding', () => {
   it('matches the native window surface to the initial Harness theme', async () => {
     const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
 
@@ -13,10 +13,10 @@ describe('DSH Desktop sidebar branding', () => {
     expect(main).toContain("window.setBackgroundColor(isDark ? '#141416' : '#ffffff')")
     expect(main).toContain('window.setWindowButtonVisibility(true)')
     expect(main).toContain('window.setWindowButtonPosition({ x: 12, y: 9 })')
-    expect(main).not.toContain('dsh-desktop-titlebar-style')
-    expect(main).not.toContain('--dsh-desktop-titlebar-height')
+    expect(main).not.toContain('deepseek-harness-studio-titlebar-style')
+    expect(main).not.toContain('--deepseek-harness-studio-titlebar-height')
     expect(main).not.toContain('body { box-sizing: border-box; padding-top:')
-    expect(main).toContain("dragRegion.id = 'dsh-desktop-drag-region'")
+    expect(main).toContain("dragRegion.id = 'deepseek-harness-studio-drag-region'")
     expect(main).toContain("dragRegion.style.setProperty('-webkit-app-region', 'drag')")
     expect(main).toContain("left: '80px'")
     expect(main).toContain("right: '220px'")
@@ -29,23 +29,23 @@ describe('DSH Desktop sidebar branding', () => {
       'utf8'
     )
 
-    expect(patch).toContain('DshDesktopLogo')
-    expect(patch).toContain('DshDesktopBrand')
+    expect(patch).toContain('StudioLogo')
+    expect(patch).toContain('StudioBrand')
     expect(patch).toContain('BrandWordmark')
-    expect(patch).toContain('/dsh-desktop-logo-light.png')
-    expect(patch).toContain('/dsh-desktop-logo-dark.png')
+    expect(patch).toContain('/deepseek-harness-studio-logo-light.png')
+    expect(patch).toContain('/deepseek-harness-studio-logo-dark.png')
     expect(patch).toContain('brandWordmark')
     expect(patch).toContain('gap:4px')
     expect(patch).toContain('transform:translateX(-24px)')
-    expect(patch).not.toContain('children: "DSH Desktop"')
+    expect(patch).not.toContain('children: "DeepSeek Harness Studio"')
     expect(patch).toContain('height = 20')
     expect(patch).toContain('height: 18')
     expect(patch).toContain('.hHd-Xa_brand:hover')
     expect(patch).toContain('padding-top:32px')
     expect(patch).toContain('navigator.userAgent.includes("Macintosh")')
     expect(patch).toContain('.hHd-Xa_root.hHd-Xa_collapsed{padding:46px 22px 6px}')
-    expect(patch).toContain('body[data-ds-dark-theme] .dshDesktopLogoLight')
-    expect(patch).toContain('body[data-ds-dark-theme] .dshDesktopLogoDark')
+    expect(patch).toContain('body[data-ds-dark-theme] .studioLogoLight')
+    expect(patch).toContain('body[data-ds-dark-theme] .studioLogoDark')
   })
 
   it('uses an 80px macOS rail that clears the traffic lights', async () => {
@@ -69,12 +69,12 @@ describe('DSH Desktop sidebar branding', () => {
 
     expect(packageJson.scripts.postinstall).toContain('node scripts/install-brand-assets.mjs')
     expect(installer).toContain("'build', 'icon.png'")
-    expect(installer).toContain("'dsh-desktop-logo.png'")
+    expect(installer).toContain("'deepseek-harness-studio-logo.png'")
     expect(installer).toContain("'build', 'logo-light.png'")
-    expect(installer).toContain("'dsh-desktop-logo-light.png'")
+    expect(installer).toContain("'deepseek-harness-studio-logo-light.png'")
     expect(installer).toContain("'build', 'logo-dark.png'")
-    expect(installer).toContain("'dsh-desktop-logo-dark.png'")
-    expect(installer).toContain('<link rel="icon" type="image/png" href="/dsh-desktop-logo.png" />')
-    expect(installer).toContain('"src": "/dsh-desktop-logo.png"')
+    expect(installer).toContain("'deepseek-harness-studio-logo-dark.png'")
+    expect(installer).toContain('<link rel="icon" type="image/png" href="/deepseek-harness-studio-logo.png" />')
+    expect(installer).toContain('"src": "/deepseek-harness-studio-logo.png"')
   })
 })

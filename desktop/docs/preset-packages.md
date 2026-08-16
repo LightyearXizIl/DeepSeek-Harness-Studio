@@ -1,6 +1,6 @@
 # DSH preset packages
 
-DSH Desktop exchanges custom Agent presets as `.dshpreset` files. A package is a ZIP archive with this layout:
+DeepSeek Harness Studio exchanges custom Agent presets as `.dshpreset` files. A package is a ZIP archive with this layout:
 
 ```text
 manifest.json
@@ -24,9 +24,9 @@ preset/
 }
 ```
 
-Only custom presets can be exported. Duplicate a built-in preset first if it should be shared. Model-provider settings, API keys, credentials, sessions, and workspace files are not added by DSH Desktop; only files inside the preset directory are packaged.
+Only custom presets can be exported. Duplicate a built-in preset first if it should be shared. Model-provider settings, API keys, credentials, sessions, and workspace files are not added by DeepSeek Harness Studio; only files inside the preset directory are packaged.
 
-Import is a two-step operation. DSH Desktop first validates and previews the archive, then writes it only after confirmation. Existing preset identifiers are never overwritten: the user must choose a new identifier. Installation writes to a temporary directory, validates the resulting preset through the Harness preset scanner, and atomically moves it into the user preset root.
+Import is a two-step operation. DeepSeek Harness Studio first validates and previews the archive, then writes it only after confirmation. Existing preset identifiers are never overwritten: the user must choose a new identifier. Installation writes to a temporary directory, validates the resulting preset through the Harness preset scanner, and atomically moves it into the user preset root.
 
 The importer rejects absolute archive paths, parent traversal, backslash-based paths, missing compositions, unsupported manifests, oversized packages, and invalid preset compositions. Export rejects symbolic links and unsupported filesystem entries. Common OS metadata such as `.DS_Store`, `Thumbs.db`, and `desktop.ini` is omitted.
 
@@ -34,7 +34,7 @@ Custom presets are executable configuration. Their compositions may load plugins
 
 ## Agent and online Skill contract
 
-DSH Desktop exposes package transfer through the same loopback Harness server used by the UI. Harness contributes its canonical loopback origin to shell tools as `DSH_WEB_URL`, so an explicitly requested online Skill can call the local transfer API without knowing the random port and without requiring the `dsh` CLI.
+DeepSeek Harness Studio exposes package transfer through the same loopback Harness server used by the UI. Harness contributes its canonical loopback origin to shell tools as `DSH_WEB_URL`, so an explicitly requested online Skill can call the local transfer API without knowing the random port and without requiring the `dsh` CLI.
 
 - `GET $DSH_WEB_URL/api/agent-preset.export?agentPreset=<id>` exports one custom Preset.
 - `POST $DSH_WEB_URL/api/agent-preset.import` previews a binary package without writing it.

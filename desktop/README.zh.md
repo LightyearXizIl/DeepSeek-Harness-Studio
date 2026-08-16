@@ -1,6 +1,6 @@
 <h1 align="center">
-  <img src="build/icon.png" width="64" alt="DSH Desktop logo" valign="middle" />
-  DSH Desktop
+  <img src="build/icon.png" width="64" alt="DeepSeek Harness Studio logo" valign="middle" />
+  DeepSeek Harness Studio
 </h1>
 
 <p align="center">
@@ -18,32 +18,32 @@
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
 
-![DSH Desktop 模型提供方设置界面](docs/images/model-provider-settings-v011.png)
+![DeepSeek Harness Studio 模型提供方设置界面](docs/images/model-provider-settings-v011.png)
 
-<p align="center"><strong>除了 DeepSeek 官方模型，DSH Desktop 也支持主流第三方模型提供方。更多基于 DSH 的有趣桌面体验即将推出。</strong></p>
+<p align="center"><strong>除了 DeepSeek 官方模型，DeepSeek Harness Studio 也支持主流第三方模型提供方。更多基于 DSH 的有趣桌面体验即将推出。</strong></p>
 
-DSH Desktop 把 DeepSeek Harness 的本地 Web 体验封装为桌面应用：应用会自动启动本地 Harness、管理随机回环端口、持久化 Profile/插件/会话，并在 Harness 就绪后直接进入完整界面。项目工作区在 Harness 界面中统一添加和管理。
+DeepSeek Harness Studio 把 DeepSeek Harness 的本地 Web 体验封装为桌面应用：应用会自动启动本地 Harness、管理随机回环端口、持久化 Profile/插件/会话，并在 Harness 就绪后直接进入完整界面。项目工作区在 Harness 界面中统一添加和管理。
 
 > [!IMPORTANT]
-> DSH Desktop 当前处于早期预览阶段，并依赖仍在快速迭代的 `@deepseek-ai/dsh@0.1.0-rc.6`。macOS 正式包已完成代码签名并通过 Apple 公证，当前安装包统一通过官网分发。
+> DeepSeek Harness Studio 当前处于早期预览阶段，并依赖仍在快速迭代的 `@deepseek-ai/dsh@0.1.0-rc.6`。macOS 正式包已完成代码签名并通过 Apple 公证，当前安装包统一通过官网分发。
 
 ## 下载安装
 
-请前往 [DSH Desktop 官网](https://www.dshdesktop.com/#download)下载 macOS 和 Windows 安装包。
+请前往 [DeepSeek Harness Studio 官网](https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases)下载 macOS 和 Windows 安装包。
 
 已安装的 macOS 和 Windows 版本会在启动后及每六小时自动检查更新。更新将在后台下载，准备完成后提示重启安装；也可以从应用菜单选择 **检查更新…** 手动检查。
 
 ## 加入社区
 
 <p align="center">
-  使用微信扫描下方二维码，加入 DSH Desktop 微信交流群。<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop 微信群二维码" /><br />
-  也可以加入 <a href="https://discord.gg/he2gAKCpj">DSH Desktop Discord 社区</a>。
+  使用微信扫描下方二维码，加入 DeepSeek Harness Studio 微信交流群。<br />
+  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DeepSeek Harness Studio 微信群二维码" /><br />
+  也可以加入 <a href="https://discord.gg/he2gAKCpj">DeepSeek Harness Studio Discord 社区</a>。
 </p>
 
 ## 为什么做这个项目
 
-DeepSeek Harness 本身提供完整的 Agent Runtime 与 Web UI。DSH Desktop 不重新实现 Harness，而是补上桌面产品所需的宿主能力：
+DeepSeek Harness 本身提供完整的 Agent Runtime 与 Web UI。DeepSeek Harness Studio 不重新实现 Harness，而是补上桌面产品所需的宿主能力：
 
 - 无需手动运行 CLI 或管理本地端口
 - 启动时自动创建应用专属的 Harness 启动目录
@@ -80,13 +80,13 @@ DeepSeek Harness 本身提供完整的 Agent Runtime 与 Web UI。DSH Desktop �
 ### 本地开发
 
 ```bash
-git clone https://github.com/dataelement/dsh-desktop.git
-cd dsh-desktop
+git clone https://github.com/LightyearXizIl/DeepSeek-Harness-Studio.git
+cd deepseek-harness-studio
 npm install
 npm run dev
 ```
 
-`npm install` 会运行 `patch-package`，重放 DSH Desktop 对 Harness 首次模型配置、Preset 压缩包导入导出和侧栏品牌的定制，安装品牌静态资源，然后安装 Electron Runtime。
+`npm install` 会运行 `patch-package`，重放 DeepSeek Harness Studio 对 Harness 首次模型配置、Preset 压缩包导入导出和侧栏品牌的定制，安装品牌静态资源，然后安装 Electron Runtime。
 
 ### 质量检查
 
@@ -115,7 +115,7 @@ Harness 包含架构相关原生模块。macOS ARM64、macOS Intel 与 Windows x
 ## 运行架构
 
 ```text
-DSH Desktop (Electron Main)
+DeepSeek Harness Studio (Electron Main)
 ├── 应用专属启动目录
 ├── Harness 子进程生命周期
 ├── 随机回环端口与启动检测
@@ -180,4 +180,4 @@ npm run build
 
 本项目采用 [MIT License](LICENSE) 开源。
 
-DeepSeek Harness 及其依赖仍遵循各自的上游许可证与商标规则。DSH Desktop 是独立的社区桌面封装项目。
+DeepSeek Harness 及其依赖仍遵循各自的上游许可证与商标规则。DeepSeek Harness Studio 是独立的社区桌面封装项目。

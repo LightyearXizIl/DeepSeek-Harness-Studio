@@ -28,10 +28,10 @@ index 629e313..27a52a1 100644
  			"newSessionLabel": "hHd-Xa_newSessionLabel"
  		};
  		//#endregion
-+		//#region lib/types/client/DshDesktopLogo.js
-+		const DSH_DESKTOP_LIGHT_LOGO_URL = "/dsh-desktop-logo-light.png";
-+		const DSH_DESKTOP_DARK_LOGO_URL = "/dsh-desktop-logo-dark.png";
-+		function DshDesktopLogo({ height = 20, className }) {
++		//#region lib/types/client/StudioLogo.js
++		const STUDIO_LIGHT_LOGO_URL = "/deepseek-harness-studio-logo-light.png";
++		const STUDIO_DARK_LOGO_URL = "/deepseek-harness-studio-logo-dark.png";
++		function StudioLogo({ height = 20, className }) {
 +			return (0, react_jsx_runtime.jsxs)("svg", {
 +				width: height * 1030 / 590,
 +				height,
@@ -40,18 +40,18 @@ index 629e313..27a52a1 100644
 +				fill: "none",
 +				"aria-hidden": "true",
 +				children: [(0, react_jsx_runtime.jsx)("style", {
-+					children: ".dshDesktopLogoDark{display:none}body[data-ds-dark-theme] .dshDesktopLogoLight{display:none}body[data-ds-dark-theme] .dshDesktopLogoDark{display:block}"
++					children: ".studioLogoDark{display:none}body[data-ds-dark-theme] .studioLogoLight{display:none}body[data-ds-dark-theme] .studioLogoDark{display:block}"
 +				}), (0, react_jsx_runtime.jsx)("image", {
-+					className: "dshDesktopLogoLight",
-+					href: DSH_DESKTOP_LIGHT_LOGO_URL,
++					className: "studioLogoLight",
++					href: STUDIO_LIGHT_LOGO_URL,
 +					x: 150,
 +					y: 330,
 +					width: 1030,
 +					height: 590,
 +					preserveAspectRatio: "xMidYMid meet"
 +				}), (0, react_jsx_runtime.jsx)("image", {
-+					className: "dshDesktopLogoDark",
-+					href: DSH_DESKTOP_DARK_LOGO_URL,
++					className: "studioLogoDark",
++					href: STUDIO_DARK_LOGO_URL,
 +					x: 150,
 +					y: 330,
 +					width: 1030,
@@ -60,12 +60,12 @@ index 629e313..27a52a1 100644
 +				})]
 +			});
 +		}
-+		function DshDesktopBrand() {
++		function StudioBrand() {
 +			return (0, react_jsx_runtime.jsxs)("span", {
 +				className: SidebarRoot_module_css_default.brandLockup,
 +				children: [(0, react_jsx_runtime.jsx)("span", {
 +					className: SidebarRoot_module_css_default.brandMark,
-+					children: (0, react_jsx_runtime.jsx)(DshDesktopLogo, {})
++					children: (0, react_jsx_runtime.jsx)(StudioLogo, {})
 +				}), (0, react_jsx_runtime.jsx)("span", {
 +					className: SidebarRoot_module_css_default.brandWordmark,
 +					children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.BrandWordmark, {})
@@ -81,7 +81,7 @@ index 629e313..27a52a1 100644
  								startSession();
  							},
 -							children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.BrandWordmark, {})
-+							children: (0, react_jsx_runtime.jsx)(DshDesktopBrand, {})
++							children: (0, react_jsx_runtime.jsx)(StudioBrand, {})
  						}), (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
  							label: collapsed ? t("toggle.open") : t("toggle.collapse"),
  							delayMs: 500,
@@ -90,7 +90,7 @@ index 629e313..27a52a1 100644
  									toggleSidebar();
  								},
 -								children: [!wide && (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.FishLogo, {
-+								children: [!wide && (0, react_jsx_runtime.jsx)(DshDesktopLogo, {
++								children: [!wide && (0, react_jsx_runtime.jsx)(StudioLogo, {
  									className: SidebarRoot_module_css_default.railFish,
 -									size: 24
 +									height: 18

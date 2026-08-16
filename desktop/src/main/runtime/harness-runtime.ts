@@ -107,7 +107,7 @@ export class HarnessRuntime {
       return
     }
     if (!existsSync(this.options.dshPatchPath)) {
-      this.setState('failed', `DSH Desktop patch was not found: ${this.options.dshPatchPath}`)
+      this.setState('failed', `DeepSeek Harness Studio patch was not found: ${this.options.dshPatchPath}`)
       return
     }
 

@@ -102,7 +102,7 @@ describe('agent preset package transfer', () => {
     expect(patch).toContain('.dshpreset')
     expect(patch).toContain('importPreset: "Import"')
     expect(patch).toContain('awesomePreset: "Awesome preset"')
-    expect(patch).toContain('https://www.dshdesktop.com/preset/')
+    expect(patch).toContain('https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/preset/')
     expect(patch).toContain('"_blank", "noopener,noreferrer"')
     expect(patch).toContain('AgentPresetSection_module_css_default.sectionActions')
   })

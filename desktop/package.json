@@ -1,20 +1,20 @@
 {
-  "name": "dsh-desktop",
+  "name": "deepseek-harness-studio",
   "version": "0.1.1",
   "description": "A cross-platform desktop shell for DeepSeek Harness.",
   "private": true,
   "type": "module",
   "main": "./out/main/index.js",
-  "author": "DataElement",
+  "author": "LightyearXizIl",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dataelement/dsh-desktop.git"
+    "url": "git+https://github.com/LightyearXizIl/DeepSeek-Harness-Studio.git"
   },
   "bugs": {
-    "url": "https://github.com/dataelement/dsh-desktop/issues"
+    "url": "https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/issues"
   },
-  "homepage": "https://github.com/dataelement/dsh-desktop#readme",
+  "homepage": "https://github.com/LightyearXizIl/DeepSeek-Harness-Studio#readme",
   "keywords": [
     "deepseek",
     "harness",
@@ -74,8 +74,8 @@
     "yaml": "^2.8.3"
   },
   "build": {
-    "appId": "io.dsh.desktop",
-    "productName": "DSH Desktop",
+    "appId": "io.deepseekharness.studio",
+    "productName": "DeepSeek Harness Studio",
     "asar": false,
     "npmRebuild": false,
     "compression": "maximum",
@@ -105,8 +105,8 @@
         "to": "harness-node-entry.mjs"
       },
       {
-        "from": "build/dsh-desktop.patch.yml",
-        "to": "dsh-desktop.patch.yml"
+        "from": "build/deepseek-harness-studio.patch.yml",
+        "to": "deepseek-harness-studio.patch.yml"
       },
       {
         "from": "build/splash.html",
@@ -115,11 +115,12 @@
     ],
     "publish": [
       {
-        "provider": "generic",
-        "url": "https://dshdesktop.com/updates/latest/"
+        "provider": "github",
+        "owner": "LightyearXizIl",
+        "repo": "DeepSeek-Harness-Studio"
       }
     ],
-    "artifactName": "dsh-desktop-${os}-${arch}.${ext}",
+    "artifactName": "deepseek-harness-studio-${os}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icon.icns",
@@ -146,7 +147,7 @@
       ]
     },
     "nsis": {
-      "artifactName": "dsh-desktop-windows-${arch}-setup.${ext}",
+      "artifactName": "deepseek-harness-studio-windows-${arch}-setup.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,

@@ -30,9 +30,9 @@ export function updateMessage(status: UpdateStatus, locale: UpdateLocale): strin
       return zh ? `正在下载更新 ${percent}%` : `Downloading update ${percent}%`
     }
     case 'downloaded':
-      return zh ? `DSH Desktop${version} 已下载完成` : `DSH Desktop${version} is ready to install`
+      return zh ? `DeepSeek Harness Studio${version} 已下载完成` : `DeepSeek Harness Studio${version} is ready to install`
     case 'up-to-date':
-      return zh ? 'DSH Desktop 已是最新版本' : 'DSH Desktop is up to date'
+      return zh ? 'DeepSeek Harness Studio 已是最新版本' : 'DeepSeek Harness Studio is up to date'
     case 'unsupported':
       return zh ? '当前版本不支持自动更新' : 'Automatic updates are unavailable in this build'
     case 'error':

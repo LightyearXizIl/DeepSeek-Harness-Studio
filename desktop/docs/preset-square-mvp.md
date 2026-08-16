@@ -20,7 +20,7 @@ MVP 不做搜索、分页、账号系统、邮箱验证、评论、评分、更�
 
 ### 2.1 复用现有 `.dshpreset` 格式
 
-广场不定义第二种包格式。继续使用 DSH Desktop 已实现的 `.dshpreset` ZIP：
+广场不定义第二种包格式。继续使用 DeepSeek Harness Studio 已实现的 `.dshpreset` ZIP：
 
 ```text
 manifest.json
@@ -35,12 +35,12 @@ preset/
 
 ### 2.2 在线 Skill，不做自然语言意图解析器
 
-广场在官网以独立 Markdown 文件托管完整的 `preset-square` Skill，不把它随 DSH Desktop 安装，也不新增 Cordis Plugin 或模型 Tool。用户第一次接入时，将一段很短的引导语发送给 DSH，明确要求读取该 `SKILL.md`、暂不执行操作并等待下一条指令。DSH 通过已有的 HTTP 与 shell 能力读取正文；后续的查找、安装和发布都在同一个会话中遵循这份正文。
+广场在官网以独立 Markdown 文件托管完整的 `preset-square` Skill，不把它随 DeepSeek Harness Studio 安装，也不新增 Cordis Plugin 或模型 Tool。用户第一次接入时，将一段很短的引导语发送给 DSH，明确要求读取该 `SKILL.md`、暂不执行操作并等待下一条指令。DSH 通过已有的 HTTP 与 shell 能力读取正文；后续的查找、安装和发布都在同一个会话中遵循这份正文。
 
 生产 Skill 地址为：
 
 ```text
-https://www.dshdesktop.com/preset/skills/preset-square/SKILL.md
+https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/preset/skills/preset-square/SKILL.md
 ```
 
 本地开发可以使用显式的 loopback 地址，例如 `http://127.0.0.1:4310/skills/preset-square/SKILL.md`。在线 Skill 只在当前会话上下文中生效；新会话需要重新读取。这样官网可以独立修订广场 API 工作流，客户端不需要因为 Skill 文案变化而发版。
@@ -103,11 +103,11 @@ flowchart LR
 
 本地设置 UI 和 Skill 都复用已经存在的 `/api/agent-preset.export`、`/api/agent-preset.import`。Skill 只做 HTTP 编排，不直接读写 Preset 目录。
 
-## 4. DSH Desktop 侧
+## 4. DeepSeek Harness Studio 侧
 
 ### 4.1 Skill 交付形态
 
-`preset-square` 由广场网站以一个可直接读取的 UTF-8 Markdown 文件交付。DSH Desktop 不复制或缓存这份文件到 `$DSH_HOME/skills`，也不设置 `DSH_BUNDLED_SKILL_DIR`。用户明确提供 Skill URL 后，Agent 使用当前模式已有的 HTTP 或 shell 能力读取正文；只要求“读取”时必须回复已准备好并停止，不能提前浏览、下载、导入、导出或发布。
+`preset-square` 由广场网站以一个可直接读取的 UTF-8 Markdown 文件交付。DeepSeek Harness Studio 不复制或缓存这份文件到 `$DSH_HOME/skills`，也不设置 `DSH_BUNDLED_SKILL_DIR`。用户明确提供 Skill URL 后，Agent 使用当前模式已有的 HTTP 或 shell 能力读取正文；只要求“读取”时必须回复已准备好并停止，不能提前浏览、下载、导入、导出或发布。
 
 Skill 使用已有 `bash`（macOS）或 `pwsh`（Windows），不注册新的模型 Tool，也不要求 `dsh` 命令可执行。命令只负责参数转义、临时文件清理、HTTP 状态检查和 SHA-256 对比；不能自行解压或写入 Preset 目录。
 
@@ -156,7 +156,7 @@ Skill 使用已有 `bash`（macOS）或 `pwsh`（Windows），不注册新的模
 首页提供“连接 DSH”按钮。中文引导语为：
 
 ```text
-请读取并遵循这个 Preset Square Skill，暂时不要执行任何操作。读完后告诉我你已准备好，并等待我的下一条指令：https://www.dshdesktop.com/preset/skills/preset-square/SKILL.md
+请读取并遵循这个 Preset Square Skill，暂时不要执行任何操作。读完后告诉我你已准备好，并等待我的下一条指令：https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/preset/skills/preset-square/SKILL.md
 ```
 
 本地开发环境可把 URL 替换为：
@@ -169,7 +169,7 @@ DSH 回复已准备好后，用户再发送操作指令，例如：
 
 ```text
 安装这个 Preset：
-https://www.dshdesktop.com/preset/p/tender-extract-a1b2c3
+https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/preset/p/tender-extract-a1b2c3
 ```
 
 页面只显示当前语言对应的一条引导语，不同时展示中英文。Skill 正文集中配置 `baseUrl`、`apiBaseUrl` 和允许域名；生产环境只允许官方 HTTPS 域名，loopback 仅用于用户明确给出的本地开发地址。
@@ -386,13 +386,13 @@ GET /api/v1/presets/:slug/download
 3. 首页和详情页。
 4. 限流、用户名派生、邮箱隐私和管理员隐藏能力。
 
-网站做到这一阶段后，可以先用 `curl` 和固定测试包验收，不依赖 DSH Desktop 完成。
+网站做到这一阶段后，可以先用 `curl` 和固定测试包验收，不依赖 DeepSeek Harness Studio 完成。
 
-### 阶段 C：DSH Desktop
+### 阶段 C：DeepSeek Harness Studio
 
 1. 保持现有 Preset 导出、预览和安装 API 的回归测试通过。
 2. 编写 `preset-square/SKILL.md` 与 macOS/Windows 辅助脚本。
-3. 将 Skill 随 DSH Desktop 安装到全局 Skill 目录。
+3. 将 Skill 随 DeepSeek Harness Studio 安装到全局 Skill 目录。
 4. 验证 Standard/Code/Creator、macOS arm64/x64 和 Windows x64；Minimal 明确显示不支持该流程。
 
 ## 8. MVP 验收标准

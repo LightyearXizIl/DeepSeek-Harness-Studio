@@ -23,10 +23,10 @@ describe('Harness launch contract', () => {
   })
 
   it('applies the desktop composition patch before web arguments', () => {
-    expect(buildHarnessArguments(43127, 'C:\\app\\dsh-desktop.patch.yml')).toEqual([
+    expect(buildHarnessArguments(43127, 'C:\\app\\deepseek-harness-studio.patch.yml')).toEqual([
       'web',
       '--patch',
-      'C:\\app\\dsh-desktop.patch.yml',
+      'C:\\app\\deepseek-harness-studio.patch.yml',
       '--host',
       '127.0.0.1',
       '--port',
@@ -36,8 +36,8 @@ describe('Harness launch contract', () => {
 
   it('launches Harness with the bundled Node.js runtime', () => {
     const options = buildHarnessSpawnOptions(
-      'C:\\Users\\tester\\AppData\\Roaming\\dsh-desktop\\launch-root',
-      'C:\\Users\\tester\\AppData\\Roaming\\dsh-desktop\\harness',
+      'C:\\Users\\tester\\AppData\\Roaming\\deepseek-harness-studio\\launch-root',
+      'C:\\Users\\tester\\AppData\\Roaming\\deepseek-harness-studio\\harness',
       'win32',
       {
         ELECTRON_RUN_AS_NODE: '1',
@@ -47,11 +47,11 @@ describe('Harness launch contract', () => {
     )
 
     expect(options).toMatchObject({
-      cwd: 'C:\\Users\\tester\\AppData\\Roaming\\dsh-desktop\\launch-root',
+      cwd: 'C:\\Users\\tester\\AppData\\Roaming\\deepseek-harness-studio\\launch-root',
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
       env: {
-        DSH_HOME: 'C:\\Users\\tester\\AppData\\Roaming\\dsh-desktop\\harness',
+        DSH_HOME: 'C:\\Users\\tester\\AppData\\Roaming\\deepseek-harness-studio\\harness',
         NO_COLOR: '1',
         Path: 'windows-path'
       }
@@ -65,7 +65,7 @@ describe('Harness launch contract', () => {
         'C:\\app\\harness-node-entry.mjs',
         'C:\\app\\dsh\\lib\\bin.js',
         43127,
-        'C:\\app\\dsh-desktop.patch.yml'
+        'C:\\app\\deepseek-harness-studio.patch.yml'
       )
     ).toEqual([
       '--expose-internals',
@@ -73,7 +73,7 @@ describe('Harness launch contract', () => {
       'C:\\app\\dsh\\lib\\bin.js',
       'web',
       '--patch',
-      'C:\\app\\dsh-desktop.patch.yml',
+      'C:\\app\\deepseek-harness-studio.patch.yml',
       '--host',
       '127.0.0.1',
       '--port',

@@ -1,6 +1,6 @@
 <h1 align="center">
-  <img src="build/icon.png" width="64" alt="DSH Desktop logo" valign="middle" />
-  DSH Desktop
+  <img src="build/icon.png" width="64" alt="DeepSeek Harness Studio logo" valign="middle" />
+  DeepSeek Harness Studio
 </h1>
 
 <p align="center">
@@ -18,32 +18,32 @@
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
 
-![DSH Desktop model provider settings](docs/images/model-provider-settings-v011.png)
+![DeepSeek Harness Studio model provider settings](docs/images/model-provider-settings-v011.png)
 
-<p align="center"><strong>Beyond official DeepSeek models, DSH Desktop supports mainstream third-party model providers—with more DSH-powered desktop experiences coming soon.</strong></p>
+<p align="center"><strong>Beyond official DeepSeek models, DeepSeek Harness Studio supports mainstream third-party model providers—with more DSH-powered desktop experiences coming soon.</strong></p>
 
-DSH Desktop packages the local DeepSeek Harness web experience as a desktop application. It launches a local Harness instance automatically, manages a random loopback port, persists profiles, plugins, and sessions, and opens the full interface as soon as Harness is ready. Project workspaces are added and managed entirely in the Harness interface.
+DeepSeek Harness Studio packages the local DeepSeek Harness web experience as a desktop application. It launches a local Harness instance automatically, manages a random loopback port, persists profiles, plugins, and sessions, and opens the full interface as soon as Harness is ready. Project workspaces are added and managed entirely in the Harness interface.
 
 > [!IMPORTANT]
-> DSH Desktop is currently an early preview and depends on the rapidly evolving `@deepseek-ai/dsh@0.1.0-rc.6`. macOS releases are code-signed and notarized by Apple; current installers are distributed through the official website.
+> DeepSeek Harness Studio is currently an early preview and depends on the rapidly evolving `@deepseek-ai/dsh@0.1.0-rc.6`. macOS releases are code-signed and notarized by Apple; current installers are distributed through the official website.
 
 ## Download
 
-Download DSH Desktop for macOS and Windows from the [official website](https://www.dshdesktop.com/#download).
+Download DeepSeek Harness Studio for macOS and Windows from the [official website](https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases).
 
 Installed macOS and Windows builds check for updates automatically after startup and every six hours. Updates download in the background and prompt you to restart when they are ready. You can also choose **Check for Updates…** from the application menu.
 
 ## Community
 
 <p align="center">
-  Scan the QR code below with WeChat to join the DSH Desktop community group.<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop WeChat group QR code" /><br />
-  Prefer Discord? <a href="https://discord.gg/he2gAKCpj">Join the DSH Desktop Discord community</a>.
+  Scan the QR code below with WeChat to join the DeepSeek Harness Studio community group.<br />
+  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DeepSeek Harness Studio WeChat group QR code" /><br />
+  Prefer Discord? <a href="https://discord.gg/he2gAKCpj">Join the DeepSeek Harness Studio Discord community</a>.
 </p>
 
 ## Why this project exists
 
-DeepSeek Harness already provides a complete agent runtime and Web UI. DSH Desktop does not reimplement Harness; it supplies the host capabilities needed for a desktop product:
+DeepSeek Harness already provides a complete agent runtime and Web UI. DeepSeek Harness Studio does not reimplement Harness; it supplies the host capabilities needed for a desktop product:
 
 - Run without manually starting a CLI or managing local ports
 - Create an application-owned Harness launch directory automatically at startup
@@ -80,13 +80,13 @@ DeepSeek Harness already provides a complete agent runtime and Web UI. DSH Deskt
 ### Local development
 
 ```bash
-git clone https://github.com/dataelement/dsh-desktop.git
-cd dsh-desktop
+git clone https://github.com/LightyearXizIl/DeepSeek-Harness-Studio.git
+cd deepseek-harness-studio
 npm install
 npm run dev
 ```
 
-`npm install` runs `patch-package` to reapply DSH Desktop's model-provider onboarding, preset package transfer, and sidebar branding, installs the brand asset, and then installs the Electron runtime.
+`npm install` runs `patch-package` to reapply DeepSeek Harness Studio's model-provider onboarding, preset package transfer, and sidebar branding, installs the brand asset, and then installs the Electron runtime.
 
 ### Quality checks
 
@@ -115,7 +115,7 @@ Harness includes architecture-specific native modules. Dependencies must be rein
 ## Runtime architecture
 
 ```text
-DSH Desktop (Electron Main)
+DeepSeek Harness Studio (Electron Main)
 ├── Application-owned launch directory
 ├── Harness child-process lifecycle
 ├── Random loopback port and readiness checks
@@ -180,4 +180,4 @@ Never include real API keys in issues, logs, screenshots, or test data.
 
 This project is open source under the [MIT License](LICENSE).
 
-DeepSeek Harness and its dependencies remain subject to their respective upstream licenses and trademark policies. DSH Desktop is an independent community desktop wrapper.
+DeepSeek Harness and its dependencies remain subject to their respective upstream licenses and trademark policies. DeepSeek Harness Studio is an independent community desktop wrapper.

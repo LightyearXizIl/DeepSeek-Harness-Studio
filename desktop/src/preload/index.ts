@@ -7,7 +7,7 @@ import {
   type UpdateLocale
 } from './update-view'
 
-const ROOT_ID = 'dsh-desktop-update-root'
+const ROOT_ID = 'deepseek-harness-studio-update-root'
 const locale: UpdateLocale = navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en'
 
 let host: HTMLDivElement | undefined
@@ -68,7 +68,7 @@ function render(): void {
   const status = currentStatus
   const card = element('aside', 'card')
   card.setAttribute('aria-live', 'polite')
-  card.setAttribute('aria-label', locale === 'zh' ? 'DSH Desktop 更新' : 'DSH Desktop update')
+  card.setAttribute('aria-label', locale === 'zh' ? 'DeepSeek Harness Studio 更新' : 'DeepSeek Harness Studio update')
 
   const row = element('div', 'row')
   const indicator = element('span', isBusy(status) ? 'spinner' : 'dot')

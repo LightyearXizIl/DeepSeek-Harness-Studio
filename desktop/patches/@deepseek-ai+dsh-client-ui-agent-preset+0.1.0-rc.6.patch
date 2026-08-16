@@ -231,7 +231,7 @@ index 9f92ac8..69a0970 100644
  					setOpen(false);
 +					setQuery("");
 +					if (id === AWESOME_PRESETS_ID) {
-+						window.open("https://www.dshdesktop.com/preset/", "_blank", "noopener,noreferrer");
++						window.open("https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/preset/", "_blank", "noopener,noreferrer");
 +						return;
 +					}
 +					const nextRecent = [id, ...recentIds.filter((recentId) => recentId !== id)].slice(0, 4);
@@ -572,7 +572,7 @@ index 9f92ac8..69a0970 100644
 +						}), (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Button, {
 +							variant: "outline",
 +							onClick: () => {
-+								window.open("https://www.dshdesktop.com/preset/", "_blank", "noopener,noreferrer");
++								window.open("https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/preset/", "_blank", "noopener,noreferrer");
 +							},
 +							children: t("awesomePreset")
 +						})]

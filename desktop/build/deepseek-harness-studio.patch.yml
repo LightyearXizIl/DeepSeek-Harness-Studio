@@ -1,4 +1,4 @@
-# DSH Desktop always runs the Host on the same machine as its operator.
+# DeepSeek Harness Studio always runs the Host on the same machine as its operator.
 # Pin the dual-face native interaction instead of the web/remote browse fallback.
 - id: directory-picker
   disabled: true

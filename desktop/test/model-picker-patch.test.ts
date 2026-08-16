@@ -9,7 +9,7 @@ const patchPath = path.join(
   '@deepseek-ai+dsh-client-ui-settings-models+0.1.0-rc.6.patch'
 )
 
-describe('DSH Desktop available-model picker', () => {
+describe('DeepSeek Harness Studio available-model picker', () => {
   it('ships one state-driven select-all toggle in the patch', async () => {
     const patch = await readFile(patchPath, 'utf8')
 

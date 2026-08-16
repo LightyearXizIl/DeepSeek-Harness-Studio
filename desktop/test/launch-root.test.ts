@@ -18,7 +18,7 @@ describe('Harness launch root', () => {
   })
 
   it('creates the launch root idempotently', async () => {
-    const userData = await mkdtemp(join(tmpdir(), 'dsh-desktop-user-data-'))
+    const userData = await mkdtemp(join(tmpdir(), 'deepseek-harness-studio-user-data-'))
     temporaryRoots.push(userData)
 
     const first = await ensureLaunchRoot(userData)

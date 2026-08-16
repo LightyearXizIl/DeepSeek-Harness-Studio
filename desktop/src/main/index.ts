@@ -34,8 +34,8 @@ function isDevelopmentBuild(): boolean {
   try {
     const metadata = JSON.parse(
       readFileSync(join(app.getAppPath(), 'package.json'), 'utf8')
-    ) as { dshDesktopChannel?: unknown }
-    return metadata.dshDesktopChannel === 'development'
+    ) as { studioChannel?: unknown }
+    return metadata.studioChannel === 'development'
   } catch {
     return false
   }
@@ -45,17 +45,17 @@ const developmentBuild = isDevelopmentBuild()
 
 function configureAppIdentity(): void {
   if (developmentBuild) {
-    app.setName('DSH Desktop Dev')
-    app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop-dev'))
+    app.setName('DeepSeek Harness Studio Dev')
+    app.setPath('userData', join(app.getPath('appData'), 'deepseek-harness-studio-dev'))
     return
   }
 
-  app.setName('DSH Desktop')
+  app.setName('DeepSeek Harness Studio')
   // Keep the historical lowercase directory stable across product-name and
   // branding changes. Harness stores workspaces, sessions, credentials, and
   // custom presets below userData, so deriving this path from app.getName()
   // would make an ordinary upgrade look like a fresh installation.
-  app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))
+  app.setPath('userData', join(app.getPath('appData'), 'deepseek-harness-studio'))
 }
 
 async function syncNativeTheme(window: BrowserWindow): Promise<void> {
@@ -69,10 +69,10 @@ async function syncNativeTheme(window: BrowserWindow): Promise<void> {
   const isDark = await window.webContents.executeJavaScript(
     `(() => {
       if (${process.platform === 'darwin'}) {
-        let dragRegion = document.getElementById('dsh-desktop-drag-region')
+        let dragRegion = document.getElementById('deepseek-harness-studio-drag-region')
         if (!dragRegion) {
           dragRegion = document.createElement('div')
-          dragRegion.id = 'dsh-desktop-drag-region'
+          dragRegion.id = 'deepseek-harness-studio-drag-region'
           dragRegion.setAttribute('aria-hidden', 'true')
           Object.assign(dragRegion.style, {
             position: 'fixed',
@@ -198,7 +198,7 @@ async function launchHarness(): Promise<void> {
 
 function showUnexpectedError(error: unknown): void {
   const message = error instanceof Error ? error.stack ?? error.message : String(error)
-  dialog.showErrorBox('DSH Desktop encountered an error', message)
+  dialog.showErrorBox('DeepSeek Harness Studio encountered an error', message)
 }
 
 async function showRuntimeFailure(snapshot: RuntimeSnapshot): Promise<void> {
@@ -334,7 +334,7 @@ async function bootstrap(): Promise<void> {
     dshEntryPath: dshEntryPath(),
     nodeExecutablePath: bundledNodePath(),
     nodeEntryPath: harnessNodeEntryPath(),
-    dshPatchPath: desktopResourcePath('dsh-desktop.patch.yml'),
+    dshPatchPath: desktopResourcePath('deepseek-harness-studio.patch.yml'),
     dshHome: join(app.getPath('userData'), 'harness'),
     logPath: join(app.getPath('logs'), 'harness.log'),
     launchProcess: (executablePath, args, options) => spawn(executablePath, args, options),
