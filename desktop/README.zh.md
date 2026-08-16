@@ -1,11 +1,10 @@
 <h1 align="center">
-  <img src="build/icon.png" width="64" alt="DeepSeek Harness Studio logo" valign="middle" />
   DeepSeek Harness Studio
 </h1>
 
 <p align="center">
-  A local-first, cross-platform desktop shell for
-  <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>.
+  基于 <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a> 的本地优先桌面客户端 ——
+  始终跟随官方上游同步更新，并内置独家本地功能。
 </p>
 
 <p align="center">
@@ -14,170 +13,86 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-171513.svg" /></a>
-  <img alt="macOS" src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-171513.svg" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
+  <img alt="macOS" src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-171513.svg" />
 </p>
 
-![DeepSeek Harness Studio 模型提供方设置界面](docs/images/model-provider-settings-v011.png)
+---
 
-<p align="center"><strong>除了 DeepSeek 官方模型，DeepSeek Harness Studio 也支持主流第三方模型提供方。更多基于 DSH 的有趣桌面体验即将推出。</strong></p>
+## DeepSeek Harness Studio 是什么？
 
-DeepSeek Harness Studio 把 DeepSeek Harness 的本地 Web 体验封装为桌面应用：应用会自动启动本地 Harness、管理随机回环端口、持久化 Profile/插件/会话，并在 Harness 就绪后直接进入完整界面。项目工作区在 Harness 界面中统一添加和管理。
+DeepSeek Harness Studio 把 DeepSeek Harness 的 Agent 运行时与 Web 界面打包成桌面应用，
+并内置三项上游没有的本地功能：
 
-> [!IMPORTANT]
-> DeepSeek Harness Studio 当前处于早期预览阶段，并依赖仍在快速迭代的 `@deepseek-ai/dsh@0.1.0-rc.6`。macOS 正式包已完成代码签名并通过 Apple 公证，当前安装包统一通过官网分发。
+1. **视觉桥接 —— DeepSeek 图片理解。** DeepSeek 模型本身不接受图片，桥接层会在请求到达
+   DeepSeek 之前，用**你自己**的视觉模型密钥自动把图片转换成文字描述。桥接按顺序自动选择
+   你已配置的第一个视觉提供商（智谱 GLM、OpenAI、Gemini、通义千问、Kimi、OpenRouter），
+   请求失败自动回退到下一个。
+2. **内置 Aqua 主题。** 玻璃拟态 UI 主题随安装包内置，开箱即用，无需单独安装插件。
+3. **自动跟随上游同步。** Harness 内核与桌面壳层持续跟随官方
+   [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 与
+   [DSH Desktop](https://github.com/dataelement/dsh-desktop) 更新；本地功能在每次更新中
+   完整保留，遇到合并冲突会**生成报告交给你决策，绝不自动解决**。
 
-## 下载安装
+首次启动时，Studio 会自动继承官方 DSH Desktop 的本地数据（API 密钥、会话、配置、插件），
+切换无痛、什么都不丢。
 
-请前往 [DeepSeek Harness Studio 官网](https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases)下载 macOS 和 Windows 安装包。
+应用内更新走本仓库自己的 GitHub Releases，永远不会被上游构建覆盖。
 
-已安装的 macOS 和 Windows 版本会在启动后及每六小时自动检查更新。更新将在后台下载，准备完成后提示重启安装；也可以从应用菜单选择 **检查更新…** 手动检查。
+## 下载
 
-## 加入社区
+从 **[Releases](https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases)** 下载
+Windows / macOS 最新安装包。
 
-<p align="center">
-  使用微信扫描下方二维码，加入 DeepSeek Harness Studio 微信交流群。<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DeepSeek Harness Studio 微信群二维码" /><br />
-  也可以加入 <a href="https://discord.gg/he2gAKCpj">DeepSeek Harness Studio Discord 社区</a>。
-</p>
+已安装版本会在启动时与每 6 小时自动检查更新，也可以在应用菜单中手动"检查更新…"。
 
-## 为什么做这个项目
+## 首次使用
 
-DeepSeek Harness 本身提供完整的 Agent Runtime 与 Web UI。DeepSeek Harness Studio 不重新实现 Harness，而是补上桌面产品所需的宿主能力：
+1. 安装并启动 DeepSeek Harness Studio。
+2. 在 **设置 → 模型 / 凭据** 中添加你的模型提供商，并输入**你自己的** API 密钥。
+   密钥只保存在本机，不会上传到任何地方。
+3. （可选）如需图片理解，配置至少一个视觉提供商密钥：`ZHIPU_API_KEY`、`OPENAI_API_KEY`、
+   `GEMINI_API_KEY`、`DASHSCOPE_API_KEY`、`MOONSHOT_API_KEY` 或 `OPENROUTER_API_KEY`
+   中的任意一个。
 
-- 无需手动运行 CLI 或管理本地端口
-- 启动时自动创建应用专属的 Harness 启动目录
-- 通过 Harness 内置目录选择器统一添加和管理项目工作区
-- 统一管理 Harness 子进程、启动检测、日志与退出
-- 把 Profile、插件和会话保存在应用安装目录之外，升级应用不丢数据
-- 提供 macOS 与 Windows 安装包构建入口
+> 安全承诺：视觉桥接**绝不内置、不记录、不上传任何密钥**。密钥只在请求时从本地凭据库按需
+> 读取，仅用于视觉模型请求；未配置密钥时会给出明确的配置指引，而不是静默失败。
 
-## 功能
+## 功能特性
 
-- 启动后直接进入 Harness，不设置额外首页
-- 启动时无需先选择目录，自动创建并复用应用内部启动目录
-- Harness 启动失败时支持重试、查看日志或退出
-- Harness 菜单支持重启子进程与查看日志
-- 退出桌面应用时优雅终止 Harness 子进程
-- 每次启动仅监听随机的 `127.0.0.1` 端口
-- Renderer 关闭 Node.js 权限，启用 `contextIsolation`、sandbox 与导航限制
-- 在桌面窗口与 Harness 侧栏统一使用 DSH 品牌 Logo
-- 可把完整的自定义 Agent 预设导入/导出为便携的 [`.dshpreset` 压缩包](docs/preset-packages.md)，安装前会检查命名冲突并提示信任风险
-- 正式 DSH 应用图标，支持 macOS ICNS 与 Windows ICO
+- 启动直达 Harness 界面，无需手动启动命令行或管理端口
+- 每次启动只监听随机的 `127.0.0.1` 端口；退出时优雅关闭 Harness 子进程
+- 视觉桥接：多提供商自动回退 + 按图片缓存（同一图片只分析一次）
+- 内置 Aqua 玻璃拟态主题（设置 → 插件 → Aqua 可开关）
+- 首次启动自动继承旧版 DSH Desktop 数据（密钥/会话/配置/插件）
+- 便携式 `.dshpreset` 预设包导入/导出，带冲突检查与信任提示
+- Windows x64 安装包（NSIS）与 macOS（Apple Silicon / Intel）构建
+- 模型提供商：DeepSeek、OpenAI、Anthropic、Google Gemini、xAI、Moonshot/Kimi、
+  MiniMax、智谱 GLM、Mistral AI、OpenRouter、Groq、Together AI
 
-## 友情链接
+## 更新机制
 
-[dsh-market](https://github.com/dsh-market/dsh-market) — DeepSeek Harness 插件市场：浏览、搜索社区 900+ 插件，截图预览、一键安装 / 更新 / 启停 / 换主题，多数插件免重启即时生效。
+- **应用更新**：来自本仓库的 GitHub Releases（自动检查，或菜单"检查更新…"）。
+- **源码同步**：本仓库内置自动同步脚本（`scripts/sync/sync-upstream.ps1`，覆盖两个官方
+  上游通道、冲突报告、本地功能保护）。完整的更新流程与维护指南见
+  [docs/INTEGRATION.md](docs/INTEGRATION.md)。
 
-## 快速开始
-
-### 环境要求
-
-- Node.js 22 或更新版本
-- npm
-- macOS Apple Silicon/Intel，或 Windows x64
-
-### 本地开发
-
-```bash
-git clone https://github.com/LightyearXizIl/DeepSeek-Harness-Studio.git
-cd deepseek-harness-studio
-npm install
-npm run dev
-```
-
-`npm install` 会运行 `patch-package`，重放 DeepSeek Harness Studio 对 Harness 首次模型配置、Preset 压缩包导入导出和侧栏品牌的定制，安装品牌静态资源，然后安装 Electron Runtime。
-
-### 质量检查
+## 从源码构建
 
 ```bash
-npm test
-npm run typecheck
-npm run build
+# 仓库结构：根目录是 harness monorepo，桌面应用在 desktop/ 下
+pnpm install          # harness workspace 依赖
+cd desktop && npm install
+npm run package:win   # 或 package:mac / package:mac:arm64
 ```
 
-### 打包
+仓库架构、上游同步流程与本地功能保护规则详见
+[docs/INTEGRATION.md](docs/INTEGRATION.md)。
 
-```bash
-# 在当前 Mac 架构上生成未签名 DMG 与 ZIP
-npm run package:mac
+## 更新日志
 
-# 分别在对应架构的 Mac/CI Runner 上执行
-npm run package:mac:arm64
-npm run package:mac:x64
-
-# 在 Windows x64 机器/Runner 上生成 NSIS 与 Portable
-npm run package:win
-```
-
-Harness 包含架构相关原生模块。macOS ARM64、macOS Intel 与 Windows x64 应在对应平台上重新安装依赖并构建。架构专用脚本会在打包前检查当前 `platform/arch`，避免生成看似成功、实际缺少原生依赖的安装包。
-
-## 运行架构
-
-```text
-DeepSeek Harness Studio (Electron Main)
-├── 应用专属启动目录
-├── Harness 子进程生命周期
-├── 随机回环端口与启动检测
-├── 原生日志/错误恢复入口
-└── 安全 BrowserWindow
-     └── http://127.0.0.1:<random>  DeepSeek Harness Web UI
-
-Electron userData
-├── launch-root/
-├── logs/harness.log
-└── harness/
-    ├── profiles/
-    ├── sessions/
-    └── 插件与用户数据
-```
-
-Harness 运行在独立的 Electron Node 子进程中。Cordis HMR 所需的 `--expose-internals` 只授予该子进程，不会授予 Web Renderer。
-
-## 项目结构
-
-```text
-src/main/             Electron 主进程、窗口与 Harness 生命周期
-src/shared/           共享运行时类型
-patches/              对固定 DSH 版本的可复现界面定制
-scripts/              品牌资源安装与目标平台打包检查
-test/                 设置、运行时、安全和 Provider 覆盖测试
-build/                应用图标资源
-```
-
-## 当前验证状态
-
-- macOS Apple Silicon：开发运行、真实 Harness 启动、DMG 打包、代码签名、Apple 公证与挂载验证均已完成
-- macOS Intel：打包配置与平台检查已提供，需要在 Intel Mac/Runner 上完成运行验证
-- Windows x64：NSIS/Portable 配置与平台检查已提供，需要在 Windows/Runner 上完成运行验证
-- Windows ARM64：当前不支持
-- 自动更新：尚未接入
-
-## 上游版本与补丁
-
-项目当前固定依赖 `@deepseek-ai/dsh@0.1.0-rc.6`。首启 Provider 列表与桌面端 Preset 导入导出界面由 [`patch-package`](https://github.com/ds300/patch-package) 固化在 [`patches/`](patches/) 中，而不是依赖未跟踪的 `node_modules` 修改。
-
-升级 DSH 时必须：
-
-1. 核对上游 Settings/Credentials 与 Provider Directory 契约；
-2. 重新应用或重写首启界面定制；
-3. 重新生成补丁；
-4. 完成真实 Harness 启动与 Provider 配置回归。
-
-## 贡献
-
-欢迎提交 Issue 与 Pull Request。提交前请至少运行：
-
-```bash
-npm test
-npm run typecheck
-npm run build
-```
-
-请勿在 Issue、日志、截图或测试数据中提交真实 API Key。
+见 [desktop/CHANGELOG.md](desktop/CHANGELOG.md)。
 
 ## 许可证
 
-本项目采用 [MIT License](LICENSE) 开源。
-
-DeepSeek Harness 及其依赖仍遵循各自的上游许可证与商标规则。DeepSeek Harness Studio 是独立的社区桌面封装项目。
+MIT —— 见 [LICENSE](LICENSE)。内置的 Aqua 主题同样为 MIT 许可。

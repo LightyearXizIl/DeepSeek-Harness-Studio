@@ -1,11 +1,11 @@
 <h1 align="center">
-  <img src="build/icon.png" width="64" alt="DeepSeek Harness Studio logo" valign="middle" />
   DeepSeek Harness Studio
 </h1>
 
 <p align="center">
-  A local-first, cross-platform desktop shell for
-  <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a>.
+  A local-first, cross-platform desktop client for
+  <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a> —
+  always in sync with the official upstream, with local extras built in.
 </p>
 
 <p align="center">
@@ -14,170 +14,95 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-171513.svg" /></a>
-  <img alt="macOS" src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-171513.svg" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
+  <img alt="macOS" src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-171513.svg" />
 </p>
 
-![DeepSeek Harness Studio model provider settings](docs/images/model-provider-settings-v011.png)
+---
 
-<p align="center"><strong>Beyond official DeepSeek models, DeepSeek Harness Studio supports mainstream third-party model providers—with more DSH-powered desktop experiences coming soon.</strong></p>
+## What is DeepSeek Harness Studio?
 
-DeepSeek Harness Studio packages the local DeepSeek Harness web experience as a desktop application. It launches a local Harness instance automatically, manages a random loopback port, persists profiles, plugins, and sessions, and opens the full interface as soon as Harness is ready. Project workspaces are added and managed entirely in the Harness interface.
+DeepSeek Harness Studio is the DeepSeek Harness agent runtime and Web UI packaged as a
+desktop application, with three local additions you will not find upstream:
 
-> [!IMPORTANT]
-> DeepSeek Harness Studio is currently an early preview and depends on the rapidly evolving `@deepseek-ai/dsh@0.1.0-rc.6`. macOS releases are code-signed and notarized by Apple; current installers are distributed through the official website.
+1. **Vision bridge — image understanding for DeepSeek.** DeepSeek models do not accept
+   images, so the bridge automatically describes your images with your **own** vision-model
+   API keys before they reach DeepSeek. The bridge auto-selects the first vision provider
+   you configured (Zhipu GLM, OpenAI, Gemini, Qwen, Kimi, OpenRouter), and falls through to
+   the next one when a request fails.
+2. **Built-in Aqua theme.** A glassmorphism UI theme ships inside the installer — no
+   separate plugin install needed.
+3. **Automatic upstream sync.** The Harness engine and the desktop shell follow the official
+   [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and
+   [DSH Desktop](https://github.com/dataelement/dsh-desktop) releases. Local features are
+   preserved on every update; merge conflicts are **reported, never auto-resolved**.
+
+On first launch the Studio inherits your existing data (API keys, sessions, profiles,
+plugins) from the official DSH Desktop — nothing is lost when you switch.
+
+Updates are served from this repository's own GitHub Releases, so the app never gets
+overwritten by upstream builds.
 
 ## Download
 
-Download DeepSeek Harness Studio for macOS and Windows from the [official website](https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases).
+Download the latest installer for macOS and Windows from
+**[Releases](https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases)**.
 
-Installed macOS and Windows builds check for updates automatically after startup and every six hours. Updates download in the background and prompt you to restart when they are ready. You can also choose **Check for Updates…** from the application menu.
+Installed builds check for updates automatically on startup and every six hours; you can
+also use **Check for Updates…** from the application menu.
 
-## Community
+## First run
 
-<p align="center">
-  Scan the QR code below with WeChat to join the DeepSeek Harness Studio community group.<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DeepSeek Harness Studio WeChat group QR code" /><br />
-  Prefer Discord? <a href="https://discord.gg/he2gAKCpj">Join the DeepSeek Harness Studio Discord community</a>.
-</p>
+1. Install and launch DeepSeek Harness Studio.
+2. Add your model providers and enter your own API keys in **Settings → Models /
+   Credentials**. Keys are stored only on your machine and are never uploaded anywhere.
+3. *(Optional)* For image understanding, configure at least one vision-provider key —
+   any of `ZHIPU_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `DASHSCOPE_API_KEY`,
+   `MOONSHOT_API_KEY` or `OPENROUTER_API_KEY`.
 
-## Why this project exists
-
-DeepSeek Harness already provides a complete agent runtime and Web UI. DeepSeek Harness Studio does not reimplement Harness; it supplies the host capabilities needed for a desktop product:
-
-- Run without manually starting a CLI or managing local ports
-- Create an application-owned Harness launch directory automatically at startup
-- Add and manage project workspaces through Harness's built-in directory picker
-- Manage the Harness child process, readiness checks, logs, and shutdown in one place
-- Store profiles, plugins, and sessions outside the application installation directory so upgrades do not remove user data
-- Provide packaging entry points for macOS and Windows
+> The vision bridge never ships, embeds or logs any API key. Keys are read on demand from
+> the local credential store and are used only for the vision-model request. Without a
+> configured key the bridge shows a clear setup hint instead of failing silently.
 
 ## Features
 
-- Opens directly into Harness without an additional landing page
-- Starts without an initial directory prompt by creating and reusing an internal launch directory
-- Offers retry, log viewing, and exit actions when Harness fails to start
-- Provides Harness menu actions for restarting the child process and viewing its log
-- Gracefully terminates the Harness child process when the desktop app exits
-- Listens only on a random `127.0.0.1` port for each launch
-- Removes Node.js privileges from the renderer and enables `contextIsolation`, sandboxing, and navigation restrictions
-- Uses the DSH brand logo consistently in the desktop window and Harness sidebar
-- Imports and exports complete custom Agent presets as portable [`.dshpreset` packages](docs/preset-packages.md), with conflict checks and a trust warning before installation
-- Includes a production DSH app icon in macOS ICNS and Windows ICO formats
+- Opens directly into Harness with no landing page; starts without an initial directory
+  prompt
+- Listens only on a random `127.0.0.1` port per launch; graceful shutdown of the Harness
+  child process
+- Vision bridge with multi-provider fallback and per-image caching
+- Built-in Aqua glassmorphism theme (toggle in Settings → Plugins → Aqua)
+- One-time migration of legacy DSH Desktop user data
+- Preset import/export as portable `.dshpreset` packages with conflict checks
+- Windows x64 installer (NSIS) and macOS (Apple Silicon / Intel) builds
+- Model providers: DeepSeek, OpenAI, Anthropic, Google Gemini, xAI, Moonshot/Kimi,
+  MiniMax, Zhipu GLM, Mistral AI, OpenRouter, Groq, Together AI
 
-## Friends
+## Updates
 
-[dsh-market](https://github.com/dsh-market/dsh-market) — the DeepSeek Harness plugin market: browse and search 900+ community plugins, preview screenshots, and install, update, enable or disable plugins, or switch themes with one click. Most plugins take effect instantly without a restart.
+- **App updates** come from this repository's GitHub Releases (automatic check, or
+  *Check for Updates…* in the menu).
+- **Source-level sync** with the official upstreams happens in this repository
+  (`scripts/sync/sync-upstream.ps1` handles both upstream channels, conflict reports and
+  local-feature protection). See [docs/INTEGRATION.md](docs/INTEGRATION.md) for the full
+  update workflow and maintenance guide.
 
-## Quick start
-
-### Requirements
-
-- Node.js 22 or later
-- npm
-- macOS on Apple Silicon or Intel, or Windows x64
-
-### Local development
+## Build from source
 
 ```bash
-git clone https://github.com/LightyearXizIl/DeepSeek-Harness-Studio.git
-cd deepseek-harness-studio
-npm install
-npm run dev
+# repository layout: harness monorepo at the root, desktop app under desktop/
+pnpm install          # harness workspace
+cd desktop && npm install
+npm run package:win   # or package:mac / package:mac:arm64
 ```
 
-`npm install` runs `patch-package` to reapply DeepSeek Harness Studio's model-provider onboarding, preset package transfer, and sidebar branding, installs the brand asset, and then installs the Electron runtime.
+See [docs/INTEGRATION.md](docs/INTEGRATION.md) for the repository architecture, the
+upstream sync workflow and the local-feature protection rules.
 
-### Quality checks
+## Changelog
 
-```bash
-npm test
-npm run typecheck
-npm run build
-```
-
-### Packaging
-
-```bash
-# Generate unsigned DMG and ZIP artifacts for the current Mac architecture
-npm run package:mac
-
-# Run each command on a Mac or CI runner with the matching architecture
-npm run package:mac:arm64
-npm run package:mac:x64
-
-# Generate NSIS and Portable artifacts on a Windows x64 machine or runner
-npm run package:win
-```
-
-Harness includes architecture-specific native modules. Dependencies must be reinstalled and built on the matching platform for macOS ARM64, macOS Intel, and Windows x64. The architecture-specific scripts validate the current `platform/arch` before packaging to prevent artifacts that appear successful but are missing native dependencies.
-
-## Runtime architecture
-
-```text
-DeepSeek Harness Studio (Electron Main)
-├── Application-owned launch directory
-├── Harness child-process lifecycle
-├── Random loopback port and readiness checks
-├── Native logging and recovery actions
-└── Hardened BrowserWindow
-     └── http://127.0.0.1:<random>  DeepSeek Harness Web UI
-
-Electron userData
-├── launch-root/
-├── logs/harness.log
-└── harness/
-    ├── profiles/
-    ├── sessions/
-    └── Plugins and user data
-```
-
-Harness runs in a separate Electron Node child process. The `--expose-internals` permission required by Cordis HMR is granted only to that child process and never to the web renderer.
-
-## Project structure
-
-```text
-src/main/             Electron main process, windows, and Harness lifecycle
-src/shared/           Shared runtime types
-patches/              Reproducible UI customizations for the pinned DSH version
-scripts/              Brand-asset installation and target-platform packaging checks
-test/                 Settings, runtime, security, and provider coverage tests
-build/                Application icon assets
-```
-
-## Current validation status
-
-- macOS Apple Silicon: development workflow, real Harness startup, DMG packaging, code signing, Apple notarization, and mounted artifact verified
-- macOS Intel: packaging configuration and platform checks provided; runtime verification still requires an Intel Mac or runner
-- Windows x64: NSIS/Portable configuration and platform checks provided; runtime verification still requires a Windows runner
-- Windows ARM64: not currently supported
-- Automatic updates: not yet integrated
-
-## Upstream version and patches
-
-The project currently pins `@deepseek-ai/dsh@0.1.0-rc.6`. The initial provider list and desktop preset-transfer surface are captured with [`patch-package`](https://github.com/ds300/patch-package) under [`patches/`](patches/) rather than relying on untracked changes in `node_modules`.
-
-When upgrading DSH:
-
-1. Verify the upstream Settings, Credentials, and Provider Directory contracts.
-2. Reapply or rewrite the customized onboarding interface.
-3. Regenerate the patch.
-4. Run regression checks against a real Harness startup and provider configuration flow.
-
-## Contributing
-
-Issues and pull requests are welcome. Before submitting a change, run at least:
-
-```bash
-npm test
-npm run typecheck
-npm run build
-```
-
-Never include real API keys in issues, logs, screenshots, or test data.
+See [desktop/CHANGELOG.md](desktop/CHANGELOG.md).
 
 ## License
 
-This project is open source under the [MIT License](LICENSE).
-
-DeepSeek Harness and its dependencies remain subject to their respective upstream licenses and trademark policies. DeepSeek Harness Studio is an independent community desktop wrapper.
+MIT — see [LICENSE](LICENSE). The bundled Aqua theme is MIT licensed as well.
