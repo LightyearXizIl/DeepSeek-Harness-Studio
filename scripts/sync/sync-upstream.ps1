@@ -28,6 +28,11 @@ function Write-OK($m)   { Write-Host "    $m" -ForegroundColor Green }
 function Write-Warn($m) { Write-Host "    $m" -ForegroundColor Yellow }
 function Write-Bad($m)  { Write-Host "    $m" -ForegroundColor Red }
 
+$UTF8 = New-Object System.Text.UTF8Encoding($false)
+function Write-Utf8File([string]$path, [string]$content) {
+  [System.IO.File]::WriteAllText($path, $content, $UTF8)
+}
+
 $SUMMARY = Join-Path $PSScriptRoot 'UPDATE-SUMMARY.md'
 $CONFLICT = Join-Path $PSScriptRoot 'CONFLICT-REPORT.md'
 
@@ -86,7 +91,7 @@ function Write-ConflictReport([string]$channel, [string[]]$files, [string[]]$det
     '| --- | --- | --- | --- |'
     ($files | ForEach-Object { "| `$_ | [ ] | [ ] | [ ] |" })
   )
-  $report -join "`n" | Set-Content -Path $CONFLICT -Encoding UTF8
+  $report -join "`n" | ForEach-Object { Write-Utf8File $CONFLICT $_ }
 }
 
 # ---- 1. clean tree check -----------------------------------------------------
@@ -113,8 +118,7 @@ Write-Host "    harness new commits: $newHarness | desktop new commits: $newDesk
 if ([int]$newHarness[0] -eq 0 -and [int]$newDesktop[0] -eq 0) {
   Write-OK 'Both upstreams are up to date.'
   if (-not $CheckOnly) {
-    "No updates. Checked $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" |
-      Set-Content -Path $SUMMARY -Encoding UTF8
+    Write-Utf8File $SUMMARY "No updates. Checked $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
   }
   exit 0
 }
@@ -194,5 +198,5 @@ if ($hits.Count -gt 0) {
 }
 
 # ---- 6. summary --------------------------------------------------------------
-$summary | Set-Content -Path $SUMMARY -Encoding UTF8
+Write-Utf8File $SUMMARY ($summary -join "`n")
 Write-OK "UPDATE-SUMMARY.md written. Next: run tests/build, then push to origin."
