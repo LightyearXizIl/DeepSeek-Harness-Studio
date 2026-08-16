@@ -14,6 +14,7 @@ import type {
   LlmModelInfo,
   LlmProviderInfo,
   LlmResolvedModelInfo,
+  Message,
   ResolvedRetryPolicy,
   StreamChunk,
 } from '@deepseek-ai/dsh-llm'
@@ -83,6 +84,12 @@ export interface DeepSeekAdapterOptions {
   resolveApiKey: (connection: DeepSeekConnectionOptions) => Promise<string>
   /** Resolve the harness-home anonymous id shared with telemetry and feedback. */
   resolveUserId: () => AnonymousUserId
+  /**
+   * [dsh-vision-bridge] Optional message pre-processor: transforms harness
+   * messages (e.g. turning image blocks into vision-model descriptions) before
+   * they are serialized for the DeepSeek wire. Absent = messages pass through.
+   */
+  bridgeMessages?: (messages: Message[]) => Promise<Message[]>
 }
 
 /** Default maximum idle interval while an adapter stream read is outstanding. */
@@ -276,7 +283,11 @@ export class DeepSeekAdapter extends LlmAdapter {
     userId: AnonymousUserId,
     onComment: () => void,
   ): AsyncIterable<StreamChunk> {
-    const body = serializeRequest(options, connection.defaults)
+    // [dsh-vision-bridge] 请求前把消息中的图片转成视觉描述（有缓存），DeepSeek 只看到文本
+    const bridgedMessages = this.config.bridgeMessages === undefined
+      ? options.messages
+      : await this.config.bridgeMessages(options.messages)
+    const body = serializeRequest({ ...options, messages: bridgedMessages }, connection.defaults)
     // Prepared outside the try so the TRANSPORT label below covers exactly the
     // transport boundary, never a serialization failure.
     const payload = JSON.stringify(body)

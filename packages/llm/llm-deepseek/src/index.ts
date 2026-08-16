@@ -14,8 +14,9 @@
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { assertUsableApiKey, LlmError, resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
-import type { RetryPolicyConfig } from '@deepseek-ai/dsh-llm'
+import type { Message, RetryPolicyConfig } from '@deepseek-ai/dsh-llm'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import { launchEnvironmentOf, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { deepEqualJson, installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
@@ -247,7 +248,83 @@ export function apply(ctx: Context, config: Config): void {
 
   let userId: AnonymousUserId | undefined
   const resolveUserId = (): AnonymousUserId => userId ??= getOrCreateAnonymousUserId()
-  const adapter = new DeepSeekAdapter({ options, resolveApiKey, resolveUserId })
+  // [dsh-vision-bridge] 视觉桥接：DeepSeek 不支持图片输入，请求前自动调用智谱 GLM 视觉模型
+  // 把消息中的图片转换成中文文字描述（按 attachmentId 缓存，同一图片只分析一次），
+  // 再交给 DeepSeek，让图片消息正常落库显示的同时 DeepSeek 也能"看懂"图片。
+  const visionBridgeCache = new Map<string, string>()
+  const analyzeImage = async (ref: ImageAttachmentRef): Promise<string | null> => {
+    const credentials = ctx.get('credentials')
+    const apiKey = credentials !== undefined
+      ? (await credentials.resolve(credentialRef('ZHIPU_API_KEY')))?.value
+      : undefined
+    if (apiKey === undefined || apiKey.length === 0) return null
+    const attachments = ctx.get('attachments')
+    if (attachments === undefined) return null
+    let stored: { data: Uint8Array }
+    try {
+      stored = await attachments.readImage(ref)
+    } catch {
+      return null
+    }
+    const mediaType = ref.mediaType ?? 'image/png'
+    let body: { choices?: Array<{ message?: { content?: unknown } }> }
+    try {
+      const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'glm-4.6v-flash',
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: `data:${mediaType};base64,${Buffer.from(stored.data).toString('base64')}` } },
+              { type: 'text', text: '请仔细查看这张图片，用中文详细描述图片中的全部内容（包括文字、布局、对象、颜色、风格等所有可见细节）。' },
+            ],
+          }],
+          max_tokens: 2048,
+        }),
+        signal: AbortSignal.timeout(60000),
+      })
+      if (!response.ok) return null
+      body = await response.json() as { choices?: Array<{ message?: { content?: unknown } }> }
+    } catch {
+      return null
+    }
+    const description = body?.choices?.[0]?.message?.content
+    return typeof description === 'string' && description.length > 0 ? description : null
+  }
+  const bridgeMessages = async (messages: Message[]): Promise<Message[]> => {
+    let bridged: Message[] | null = null
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i]
+      const content = message.content
+      if (!Array.isArray(content) || !content.some(block => block.type === 'image')) continue
+      const images = content.filter(block => block.type === 'image')
+      const others = content.filter(block => block.type !== 'image')
+      const analyses: string[] = []
+      for (const image of images) {
+        const id = image.attachment?.attachmentId
+        let description = id !== undefined ? visionBridgeCache.get(id) : undefined
+        if (description === undefined) {
+          description = await analyzeImage(image.attachment)
+          if (description === null) {
+            throw new LlmError('图片分析失败：视觉模型（智谱 GLM）未能返回描述。', 'UNSUPPORTED_CONTENT')
+          }
+          if (id !== undefined) visionBridgeCache.set(id, description)
+        }
+        analyses.push(description)
+      }
+      const summary = analyses.map((d, index) => `【图片 ${index + 1}】${d}`).join('\n\n')
+      const next: Message = {
+        ...message,
+        content: [...others, { type: 'text', text: `【视觉模型已分析用户发送的图片】\n${summary}` }],
+      }
+      if (bridged === null) bridged = [...messages]
+      bridged[i] = next
+    }
+    return bridged ?? messages
+  }
+  const adapter = new DeepSeekAdapter({ options, resolveApiKey, resolveUserId, bridgeMessages })
   ctx.llm.registerConfigurableProviders([
     { provider: PROVIDER, displayName: 'DeepSeek', settingsNs: NS, settingsPath: [] },
   ])

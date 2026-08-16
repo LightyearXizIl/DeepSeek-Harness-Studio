@@ -2023,8 +2023,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     return ok(request, namespaceView(descriptor))
   }
 
-  return {
-    sessions: {
+  async prompt(request) {
       // Attached sessions summarize from memory; persisted-but-unattached (cold)
       // sessions merge in from the persistence store so history survives restarts.
       // Logs without a cwd are not served; every session records its project
@@ -2292,18 +2291,8 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
                 ? {}
                 : { reasoningEffort: ReasoningEffortId(reasoningEffort) },
             })
-            const pendingImage = [...found.agent.inbox.nextTurn, ...found.agent.inbox.nextStep]
-              .some(message => contentHasImage(message.content))
-            if (pendingImage || messagesHaveImage(found.agent.session.deriveMessages())) {
-              const info = await ctx.llm.resolveModelInfo(resolved.provider, resolved.model)
-              if (info.inputModalities !== undefined && !info.inputModalities.includes('image')) {
-                return err(request, {
-                  code: 'model-unavailable',
-                  message: `Model "${resolved.model}" does not accept image input, but this session already contains images; select an image-capable model.`,
-                  details: { provider, model },
-                })
-              }
-            }
+            // [dsh-vision-bridge] 模型切换不再校验图片：会话中的图片由 llm 适配器层
+            // 自动桥接（DeepSeek 请求前转成视觉描述），因此允许任意模型接管含图会话。
             const selected: ModelSelection = {
               provider: resolved.provider,
               model: resolved.model,
@@ -2482,17 +2471,9 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         const hasImage = content.some(part => part.type === 'image')
         const admit = async (): Promise<RpcResponse<{ accepted: true }>> => {
           try {
-            if (hasImage) {
-              const current = selectionFor(agent).current
-              const modelInfo = await ctx.llm.resolveModelInfo(current.provider, current.model)
-              if (modelInfo.inputModalities !== undefined && !modelInfo.inputModalities.includes('image')) {
-                return err(request, {
-                  code: 'attachment-error',
-                  message: `Model "${current.model}" does not support image input.`,
-                  details: { reason: 'MODEL_DOES_NOT_SUPPORT_IMAGES' },
-                })
-              }
-            }
+            // [dsh-vision-bridge] 图片准入：模型是否支持图片由 llm 适配器层决定
+            // （DeepSeek 等纯文本模型在请求前自动把图片转成视觉描述），这里一律放行，
+            // 让图片消息正常落库并在会话中显示。
             const durable = await durablePromptContent(ctx, content)
             const message: UserMessage = createUserMessage({ content: durable, source })
             if (mode === 'steer') agent.steer(message)
