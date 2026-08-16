@@ -128,7 +128,7 @@ if ($CheckOnly) {
   exit 0
 }
 
-$summary = @()
+$reportLines = @()
 $blocked = @()
 
 # ---- 3. Channel A: harness ---------------------------------------------------
@@ -146,10 +146,10 @@ if ([int]$newHarness[0] -gt 0) {
     exit 4
   }
   $changed = @(& git -C $Repo diff --name-only "$before..HEAD")
-  $summary += "## Channel A: harness merged (upstream commits: $($newHarness[0]))"
+  $reportLines += "## Channel A: harness merged (upstream commits: $($newHarness[0]))"
   foreach ($f in $changed) {
-    if (Is-Protected $f) { $summary += "- PROTECTED: $f - verify local feature still intact" }
-    else { $summary += "- $f" }
+    if (Is-Protected $f) { $reportLines += "- PROTECTED: $f - verify local feature still intact" }
+    else { $reportLines += "- $f" }
   }
   Write-OK "merged ($($changed.Count) files changed)"
 }
@@ -169,10 +169,10 @@ if ([int]$newDesktop[0] -gt 0) {
     exit 5
   }
   $changed = @(& git -C $Repo diff --name-only "$before..HEAD")
-  $summary += "## Channel B: desktop subtree pulled (upstream commits: $($newDesktop[0]))"
+  $reportLines += "## Channel B: desktop subtree pulled (upstream commits: $($newDesktop[0]))"
   foreach ($f in $changed) {
-    if (Is-Protected $f) { $summary += "- PROTECTED: $f - verify local feature still intact" }
-    else { $summary += "- $f" }
+    if (Is-Protected $f) { $reportLines += "- PROTECTED: $f - verify local feature still intact" }
+    else { $reportLines += "- $f" }
   }
   Write-OK "merged ($($changed.Count) files changed)"
 }
@@ -190,13 +190,13 @@ foreach ($f in $allChanged) {
   }
 }
 if ($hits.Count -gt 0) {
-  $summary += "## Feature-overlap candidates (review needed)"
-  foreach ($h in $hits) { $summary += "- $h" }
+  $reportLines += "## Feature-overlap candidates (review needed)"
+  foreach ($h in $hits) { $reportLines += "- $h" }
   Write-Warn "Possible feature overlap detected - see UPDATE-SUMMARY.md, ask the agent for a feature-compare report."
 } else {
   Write-OK 'no overlap candidates'
 }
 
 # ---- 6. summary --------------------------------------------------------------
-Write-Utf8File $SUMMARY ($summary -join "`n")
+Write-Utf8File $SUMMARY ($reportLines -join "`n")
 Write-OK "UPDATE-SUMMARY.md written. Next: run tests/build, then push to origin."
