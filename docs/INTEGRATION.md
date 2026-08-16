@@ -523,3 +523,5 @@ D1 保留 GitHub 更新源并指向你自己的仓库（否则官方发版会覆
 4. PowerShell 5.1 兼容：stderr 合并、`Set-Content -Encoding`、变量大小写冲突均已在脚本中规避。
 5. desktop 测试被 harness 根 vitest 配置干扰 → 新增 `desktop/vitest.config.ts` 隔离。
 6. rebrand 后 README 下载断言与 GitHub 发布渠道矛盾 → 断言已按 D7 修正。
+7. **D2 桌面补丁已落地**：`@deepseek-ai/dsh-llm-deepseek`（视觉桥接 + 缺密钥提示）与 `@deepseek-ai/dsh-host-apiproxy`（图片校验绕过，官方预设归档改动保留）的 patch-package 补丁；**已验证打进安装包**（win-unpacked 内 node_modules 含视觉桥接）。
+8. **密钥安全红线（用户硬性要求）**：视觉桥接**绝无硬编码密钥**——`ZHIPU_API_KEY` 只从本地凭据库（credentials 服务）按需读取，用户在设置 → 凭据中自行输入、仅存本机；未配置时抛出明确指引（`MISSING_CREDENTIAL`）；密钥只用于请求智谱 API 的 authorization 头，不记录、不上传。源码版与桌面补丁版行为一致。
