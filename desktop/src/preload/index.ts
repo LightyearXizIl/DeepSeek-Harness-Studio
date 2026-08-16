@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import type { UpdateStatus } from '../shared/contracts'
 import {
   isUpdateDismissed,
@@ -296,3 +296,19 @@ if (document.readyState === 'loading') {
 } else {
   mount()
 }
+
+// [local] Settings -> Update section bridge: exposes the updater to the
+// renderer (the ui-studio-update client plugin) through contextBridge.
+contextBridge.exposeInMainWorld('studioUpdate', {
+  check: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:check'),
+  getStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:status'),
+  install: (): Promise<void> => ipcRenderer.invoke('updates:install'),
+  onStatus: (callback: (status: UpdateStatus) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void =>
+      callback(status)
+    ipcRenderer.on('updates:status-changed', listener)
+    return () => {
+      ipcRenderer.removeListener('updates:status-changed', listener)
+    }
+  },
+})

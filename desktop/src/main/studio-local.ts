@@ -35,12 +35,25 @@ function readVersion(packageJsonPath: string): string | undefined {
  * Failure is non-fatal: the app must still start even if the theme cannot be
  * installed, so the Harness UI is usable without it.
  */
-export async function ensureStudioThemeInstalled(
+/**
+ * Install a vendored Studio package (Aqua theme, Update section, ...) into the
+ * Harness plugin directory so it is available without any external download.
+ * The Harness profile plugin loader resolves plugins from
+ * <dshHome>/profiles/node_modules (the same mechanism the standalone Aqua
+ * installer uses). Copy is version-guarded: when the installed copy already
+ * matches the vendored version it is left untouched.
+ *
+ * Failure is non-fatal: the app must still start even if the package cannot
+ * be installed, so the Harness UI is usable without it.
+ */
+export async function ensureStudioPluginInstalled(
   dshHome: string,
-  themeSource: string
-): Promise<void> {  const destination = join(dshHome, 'profiles', 'node_modules', THEME_PACKAGE)
+  packageName: string,
+  packageSource: string
+): Promise<void> {
+  const destination = join(dshHome, 'profiles', 'node_modules', packageName)
   try {
-    const sourceVersion = readVersion(join(themeSource, 'package.json'))
+    const sourceVersion = readVersion(join(packageSource, 'package.json'))
     const destinationVersion = readVersion(join(destination, 'package.json'))
     if (
       destinationVersion !== undefined &&
@@ -53,9 +66,9 @@ export async function ensureStudioThemeInstalled(
     if (existsSync(destination)) {
       rmSync(destination, { recursive: true, force: true })
     }
-    cpSync(themeSource, destination, { recursive: true })
+    cpSync(packageSource, destination, { recursive: true })
   } catch (error) {
-    console.warn('[studio] failed to install theme, continuing without it:', error)
+    console.warn(`[studio] failed to install ${packageName}, continuing without it:`, error)
   }
 }
 

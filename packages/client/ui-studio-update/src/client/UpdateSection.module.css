@@ -1,0 +1,64 @@
+/* Settings -> Update section. Design language matches the stock settings
+ * rows (AppearanceRow et al.): group column with hairline separator, 14px
+ * label-primary title, alias-token palette. Buttons/progress use official
+ * atoms and tokens, so the panel follows the active theme (incl. Aqua). */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+}
+
+.statusText {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.statusText[data-phase='error'] {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.meta {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  overflow: hidden;
+}
+
+.progressValue {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--dsw-alias-accent-strong);
+  transition: width 0.2s ease;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}

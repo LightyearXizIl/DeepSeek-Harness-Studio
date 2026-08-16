@@ -36,6 +36,7 @@ export function registerUpdateHandlers(): void {
   if (handlersRegistered) return
   handlersRegistered = true
   ipcMain.handle('updates:status', () => getUpdateStatus())
+  ipcMain.handle('updates:check', () => checkForUpdates(true))
   ipcMain.handle('updates:install', () => installDownloadedUpdate())
 }
 

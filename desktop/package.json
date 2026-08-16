@@ -117,6 +117,10 @@
         "to": "vendor/@deepseek-ai/dsh-client-ui-aqua"
       },
       {
+        "from": "vendor/@deepseek-ai/dsh-client-ui-studio-update",
+        "to": "vendor/@deepseek-ai/dsh-client-ui-studio-update"
+      },
+      {
         "from": "build/splash.html",
         "to": "splash.html"
       }

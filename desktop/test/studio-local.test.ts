@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import YAML from 'yaml'
 import {
-  ensureStudioThemeInstalled,
+  ensureStudioPluginInstalled,
   mergedPatchPath,
   migrateLegacyUserData
 } from '../src/main/studio-local'
@@ -55,17 +55,17 @@ describe('mergedPatchPath', () => {
   })
 })
 
-describe('ensureStudioThemeInstalled', () => {
-  it('copies the vendored theme into the Harness plugin directory', async () => {
+describe('ensureStudioPluginInstalled', () => {
+  it('copies the vendored plugin into the Harness plugin directory', async () => {
     const dir = await makeTempDir()
     try {
       const dshHome = join(dir, 'dshHome')
-      const source = join(dir, 'theme-source')
+      const source = join(dir, 'plugin-source')
       await mkdir(join(source, 'lib'), { recursive: true })
       await writeFile(join(source, 'package.json'), JSON.stringify({ version: '1.2.3' }))
       await writeFile(join(source, 'lib', 'client.js'), 'export {}')
 
-      await ensureStudioThemeInstalled(dshHome, source)
+      await ensureStudioPluginInstalled(dshHome, '@deepseek-ai/dsh-client-ui-aqua', source)
 
       const destination = join(
         dshHome,
@@ -87,7 +87,7 @@ describe('ensureStudioThemeInstalled', () => {
     const dir = await makeTempDir()
     try {
       const dshHome = join(dir, 'dshHome')
-      const source = join(dir, 'theme-source')
+      const source = join(dir, 'plugin-source')
       const destination = join(
         dshHome,
         'profiles',
@@ -99,9 +99,9 @@ describe('ensureStudioThemeInstalled', () => {
       await writeFile(join(source, 'package.json'), JSON.stringify({ version: '1.2.3' }))
       await writeFile(join(source, 'lib', 'client.js'), 'export {}')
 
-      await ensureStudioThemeInstalled(dshHome, source)
+      await ensureStudioPluginInstalled(dshHome, '@deepseek-ai/dsh-client-ui-aqua', source)
       await writeFile(join(destination, 'lib', 'client.js'), 'export const marker = "user-edit"')
-      await ensureStudioThemeInstalled(dshHome, source)
+      await ensureStudioPluginInstalled(dshHome, '@deepseek-ai/dsh-client-ui-aqua', source)
 
       // Same version: the user-visible marker must survive (no re-copy).
       const content = await readFile(join(destination, 'lib', 'client.js'), 'utf8')

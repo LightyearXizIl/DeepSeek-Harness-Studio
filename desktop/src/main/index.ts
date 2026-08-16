@@ -13,7 +13,7 @@ import {
 import { HarnessRuntime } from './runtime/harness-runtime'
 import { secureWindow } from './security'
 import { ensureLaunchRoot } from './state/launch-root'
-import { ensureStudioThemeInstalled, mergedPatchPath, migrateLegacyUserData } from './studio-local'
+import { ensureStudioPluginInstalled, mergedPatchPath, migrateLegacyUserData } from './studio-local'
 import { isAbortedNavigationError, shouldLoadHarnessUrl } from './window-navigation'
 import {
   checkForUpdates,
@@ -333,7 +333,16 @@ async function bootstrap(): Promise<void> {
   registerUpdateHandlers()
   createWindow()
   const dshHome = join(app.getPath('userData'), 'harness')
-  await ensureStudioThemeInstalled(dshHome, desktopResourcePath('vendor/@deepseek-ai/dsh-client-ui-aqua'))
+  await ensureStudioPluginInstalled(
+    dshHome,
+    '@deepseek-ai/dsh-client-ui-aqua',
+    desktopResourcePath('vendor/@deepseek-ai/dsh-client-ui-aqua')
+  )
+  await ensureStudioPluginInstalled(
+    dshHome,
+    '@deepseek-ai/dsh-client-ui-studio-update',
+    desktopResourcePath('vendor/@deepseek-ai/dsh-client-ui-studio-update')
+  )
   runtime = new HarnessRuntime({
     dshEntryPath: dshEntryPath(),
     nodeExecutablePath: bundledNodePath(),
