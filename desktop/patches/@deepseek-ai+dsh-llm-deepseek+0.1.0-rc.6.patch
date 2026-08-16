@@ -1,0 +1,107 @@
+diff --git a/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js b/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
+index b9624f2..910d03c 100644
+--- a/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
+@@ -568,7 +568,8 @@ var DeepSeekAdapter = class extends LlmAdapter {
+ 		}
+ 	}
+ 	async *request(options, signal, connection, apiKey, userId, onComment) {
+-		const body = serializeRequest(options, connection.defaults);
++		const bridgedMessages = this.config.bridgeMessages === void 0 ? options.messages : await this.config.bridgeMessages(options.messages);
++		const body = serializeRequest({ ...options, messages: bridgedMessages }, connection.defaults);
+ 		const payload = JSON.stringify(body);
+ 		const headers = {
+ 			"authorization": `Bearer ${apiKey}`,
+@@ -749,12 +750,91 @@ function apply(ctx, config) {
+ 		}
+ 		throw new LlmError(`llm-deepseek: no API key for provider route "${PROVIDER}"; store ${ref} through the credentials service (the web Models page writes it), or export ${ref} in the launching environment`, "MISSING_CREDENTIAL");
+ 	};
++	// [dsh-vision-bridge] 视觉桥接：DeepSeek 不支持图片输入，请求前自动调用智谱 GLM 视觉模型
++	// 把消息中的图片转换成中文文字描述（按 attachmentId 缓存，同一图片只分析一次）。
++	const visionBridgeCache = new Map();
++	const analyzeImage = async (ref) => {
++		const credentials = ctx.get("credentials");
++		const apiKey = credentials !== void 0 ? (await credentials.resolve(credentialRef("ZHIPU_API_KEY")))?.value : void 0;
++		if (apiKey === void 0 || apiKey.length === 0) return null;
++		const attachments = ctx.get("attachments");
++		if (attachments === void 0) return null;
++		let stored;
++		try {
++			stored = await attachments.readImage(ref);
++		} catch {
++			return null;
++		}
++		const mediaType = ref.mediaType ?? "image/png";
++		let body;
++		try {
++			const response = await fetch("https://open.bigmodel.cn/api/paas/v4/chat/completions", {
++				method: "POST",
++				headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
++				body: JSON.stringify({
++					model: "glm-4.6v-flash",
++					messages: [{
++						role: "user",
++						content: [
++							{ type: "image_url", image_url: { url: `data:${mediaType};base64,${Buffer.from(stored.data).toString("base64")}` } },
++							{ type: "text", text: "请仔细查看这张图片，用中文详细描述图片中的全部内容（包括文字、布局、对象、颜色、风格等所有可见细节）。" }
++						]
++					}],
++					max_tokens: 2048
++				}),
++				signal: AbortSignal.timeout(60000)
++			});
++			if (!response.ok) return null;
++			body = await response.json();
++		} catch {
++			return null;
++		}
++		const description = body?.choices?.[0]?.message?.content;
++		return typeof description === "string" && description.length > 0 ? description : null;
++	};
++	const bridgeMessages = async (messages) => {
++		let bridged = null;
++		for (let i = 0; i < messages.length; i++) {
++			const message = messages[i];
++			if (message === void 0) continue;
++			const content = message.content;
++			if (!Array.isArray(content) || !content.some((block) => block.type === "image")) continue;
++			const images = content.filter((block) => block.type === "image");
++			const others = content.filter((block) => block.type !== "image");
++			const analyses = [];
++			for (const image of images) {
++				const id = image.attachment?.attachmentId;
++				let description;
++				const cached = id !== void 0 ? visionBridgeCache.get(id) : void 0;
++				if (cached !== void 0) {
++					description = cached;
++				} else {
++					const analyzed = await analyzeImage(image.attachment);
++					if (analyzed === null) {
++						throw new LlmError("图片分析失败：视觉模型（智谱 GLM）未能返回描述。", "UNSUPPORTED_CONTENT");
++					}
++					description = analyzed;
++					if (id !== void 0) visionBridgeCache.set(id, description);
++				}
++				analyses.push(description);
++			}
++			const summary = analyses.map((d, index) => `【图片 ${index + 1}】${d}`).join("\n\n");
++			const next = {
++				...message,
++				content: [...others, { type: "text", text: `【视觉模型已分析用户发送的图片】\n${summary}` }]
++			};
++			if (bridged === null) bridged = [...messages];
++			bridged[i] = next;
++		}
++		return bridged ?? messages;
++	};
+ 	let userId;
+ 	const resolveUserId = () => userId ??= getOrCreateAnonymousUserId();
+ 	const adapter = new DeepSeekAdapter({
+ 		options,
+ 		resolveApiKey,
+-		resolveUserId
++		resolveUserId,
++		bridgeMessages
+ 	});
+ 	ctx.llm.registerConfigurableProviders([{
+ 		provider: PROVIDER,

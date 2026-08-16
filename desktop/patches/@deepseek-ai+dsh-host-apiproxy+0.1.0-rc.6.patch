@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-host-apiproxy/lib/index.js b/node_modules/@deepseek-ai/dsh-host-apiproxy/lib/index.js
-index 9e3afa7..1c97a67 100644
+index 9e3afa7..9762bbb 100644
 --- a/node_modules/@deepseek-ai/dsh-host-apiproxy/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-host-apiproxy/lib/index.js
 @@ -1,8 +1,8 @@
@@ -135,7 +135,43 @@ index 9e3afa7..1c97a67 100644
  //#region lib/types/session-export.js
  /**
  * Host-side session-log download: streams one ZIP archive whose files are the
-@@ -3299,6 +3403,127 @@ function createApiProxy(ctx, defaults) {
+@@ -2682,17 +2786,7 @@ function createApiProxy(ctx, defaults) {
+ 							model,
+ 							...reasoningEffort === void 0 ? {} : { reasoningEffort: ReasoningEffortId(reasoningEffort) }
+ 						});
+-						if ([...found.agent.inbox.nextTurn, ...found.agent.inbox.nextStep].some((message) => contentHasImage(message.content)) || messagesHaveImage(found.agent.session.deriveMessages())) {
+-							const info = await ctx.llm.resolveModelInfo(resolved.provider, resolved.model);
+-							if (info.inputModalities !== void 0 && !info.inputModalities.includes("image")) return err(request, {
+-								code: "model-unavailable",
+-								message: `Model "${resolved.model}" does not accept image input, but this session already contains images; select an image-capable model.`,
+-								details: {
+-									provider,
+-									model
+-								}
+-							});
+-						}
++						// [dsh-vision-bridge] 模型切换不再校验图片：会话中的图片由 llm 适配器层自动桥接。
+ 						const selected = {
+ 							provider: resolved.provider,
+ 							model: resolved.model,
+@@ -2838,15 +2932,7 @@ function createApiProxy(ctx, defaults) {
+ 				const hasImage = content.some((part) => part.type === "image");
+ 				const admit = async () => {
+ 					try {
+-						if (hasImage) {
+-							const current = selectionFor(agent).current;
+-							const modelInfo = await ctx.llm.resolveModelInfo(current.provider, current.model);
+-							if (modelInfo.inputModalities !== void 0 && !modelInfo.inputModalities.includes("image")) return err(request, {
+-								code: "attachment-error",
+-								message: `Model "${current.model}" does not support image input.`,
+-								details: { reason: "MODEL_DOES_NOT_SUPPORT_IMAGES" }
+-							});
+-						}
++						// [dsh-vision-bridge] 图片准入：模型是否支持图片由 llm 适配器层决定，这里一律放行。
+ 						const message = createUserMessage({
+ 							content: await durablePromptContent(ctx, content),
+ 							source
+@@ -3299,6 +3385,127 @@ function createApiProxy(ctx, defaults) {
  			}
  		},
  		agentPresets: {
@@ -263,7 +299,7 @@ index 9e3afa7..1c97a67 100644
  			async list(request) {
  				const presets = ctx.get("agentPresets");
  				if (presets === void 0) return ok(request, {
-@@ -4993,6 +5218,34 @@ function toFetchHandler(api) {
+@@ -4993,6 +5200,34 @@ function toFetchHandler(api) {
  			rpcId: RpcId(randomUUID()),
  			payload: {}
  		}, req.signal));
