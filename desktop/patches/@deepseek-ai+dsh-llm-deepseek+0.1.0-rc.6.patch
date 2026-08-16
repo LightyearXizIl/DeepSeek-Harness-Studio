@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js b/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
-index b9624f2..910d03c 100644
+index b9624f2..a2049fc 100644
 --- a/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js
 @@ -568,7 +568,8 @@ var DeepSeekAdapter = class extends LlmAdapter {
@@ -12,7 +12,7 @@ index b9624f2..910d03c 100644
  		const payload = JSON.stringify(body);
  		const headers = {
  			"authorization": `Bearer ${apiKey}`,
-@@ -749,12 +750,91 @@ function apply(ctx, config) {
+@@ -749,12 +750,93 @@ function apply(ctx, config) {
  		}
  		throw new LlmError(`llm-deepseek: no API key for provider route "${PROVIDER}"; store ${ref} through the credentials service (the web Models page writes it), or export ${ref} in the launching environment`, "MISSING_CREDENTIAL");
  	};
@@ -22,7 +22,9 @@ index b9624f2..910d03c 100644
 +	const analyzeImage = async (ref) => {
 +		const credentials = ctx.get("credentials");
 +		const apiKey = credentials !== void 0 ? (await credentials.resolve(credentialRef("ZHIPU_API_KEY")))?.value : void 0;
-+		if (apiKey === void 0 || apiKey.length === 0) return null;
++		if (apiKey === void 0 || apiKey.length === 0) {
++			throw new LlmError("未配置智谱 API 密钥：图片理解需要 ZHIPU_API_KEY，请在设置 → 凭据（Credentials）中填写你自己的密钥（仅保存在本机）。", "MISSING_CREDENTIAL");
++		}
 +		const attachments = ctx.get("attachments");
 +		if (attachments === void 0) return null;
 +		let stored;

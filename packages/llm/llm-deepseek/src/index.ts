@@ -251,13 +251,22 @@ export function apply(ctx: Context, config: Config): void {
   // [dsh-vision-bridge] 视觉桥接：DeepSeek 不支持图片输入，请求前自动调用智谱 GLM 视觉模型
   // 把消息中的图片转换成中文文字描述（按 attachmentId 缓存，同一图片只分析一次），
   // 再交给 DeepSeek，让图片消息正常落库显示的同时 DeepSeek 也能"看懂"图片。
+  //
+  // 安全边界：本功能绝不硬编码、不记录、不上传任何密钥。智谱密钥只从本地凭据库
+  // （credentials 服务，由用户在设置界面自行输入并保存在本机）按需读取，仅用于
+  // 请求智谱 API 的 authorization 头；未配置时抛出明确的配置指引，而不是静默失败。
   const visionBridgeCache = new Map<string, string>()
   const analyzeImage = async (ref: ImageAttachmentRef): Promise<string | null> => {
     const credentials = ctx.get('credentials')
     const apiKey = credentials !== undefined
       ? (await credentials.resolve(credentialRef('ZHIPU_API_KEY')))?.value
       : undefined
-    if (apiKey === undefined || apiKey.length === 0) return null
+    if (apiKey === undefined || apiKey.length === 0) {
+      throw new LlmError(
+        '未配置智谱 API 密钥：图片理解需要 ZHIPU_API_KEY，请在设置 → 凭据（Credentials）中填写你自己的密钥（仅保存在本机）。',
+        'MISSING_CREDENTIAL',
+      )
+    }
     const attachments = ctx.get('attachments')
     if (attachments === undefined) return null
     let stored: { data: Uint8Array }
