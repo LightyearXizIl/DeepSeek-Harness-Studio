@@ -13,7 +13,7 @@ import {
 import { HarnessRuntime } from './runtime/harness-runtime'
 import { secureWindow } from './security'
 import { ensureLaunchRoot } from './state/launch-root'
-import { ensureStudioThemeInstalled, mergedPatchPath } from './studio-local'
+import { ensureStudioThemeInstalled, mergedPatchPath, migrateLegacyUserData } from './studio-local'
 import { isAbortedNavigationError, shouldLoadHarnessUrl } from './window-navigation'
 import {
   checkForUpdates,
@@ -328,6 +328,7 @@ function installMenu(): void {
 
 async function bootstrap(): Promise<void> {
   if (process.platform === 'darwin') app.dock?.setIcon(desktopIconPath())
+  await migrateLegacyUserData(app.getPath('userData'), app.getPath('appData'))
   launchDirectory = await ensureLaunchRoot(app.getPath('userData'))
   registerUpdateHandlers()
   createWindow()

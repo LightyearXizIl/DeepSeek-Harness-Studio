@@ -248,25 +248,61 @@ export function apply(ctx: Context, config: Config): void {
 
   let userId: AnonymousUserId | undefined
   const resolveUserId = (): AnonymousUserId => userId ??= getOrCreateAnonymousUserId()
-  // [dsh-vision-bridge] 视觉桥接：DeepSeek 不支持图片输入，请求前自动调用智谱 GLM 视觉模型
+  // [dsh-vision-bridge] 视觉桥接：DeepSeek 不支持图片输入，请求前自动调用视觉模型
   // 把消息中的图片转换成中文文字描述（按 attachmentId 缓存，同一图片只分析一次），
   // 再交给 DeepSeek，让图片消息正常落库显示的同时 DeepSeek 也能"看懂"图片。
   //
-  // 安全边界：本功能绝不硬编码、不记录、不上传任何密钥。智谱密钥只从本地凭据库
+  // 安全边界：本功能绝不硬编码、不记录、不上传任何密钥。密钥只从本地凭据库
   // （credentials 服务，由用户在设置界面自行输入并保存在本机）按需读取，仅用于
-  // 请求智谱 API 的 authorization 头；未配置时抛出明确的配置指引，而不是静默失败。
+  // 请求视觉模型 API 的 authorization 头；未配置时抛出明确的配置指引，而不是静默失败。
+  //
+  // 提供商选择：按候选表顺序尝试，使用本地凭据库中第一个已配置密钥的提供商；
+  // 请求失败（密钥无效/模型不可用）自动回退到下一个候选。全部为 OpenAI 兼容
+  // /chat/completions 格式（image_url 消息），覆盖智谱、OpenAI、Gemini、通义、
+  // Kimi、OpenRouter 等主流视觉模型。
   const visionBridgeCache = new Map<string, string>()
-  const analyzeImage = async (ref: ImageAttachmentRef): Promise<string | null> => {
-    const credentials = ctx.get('credentials')
-    const apiKey = credentials !== undefined
-      ? (await credentials.resolve(credentialRef('ZHIPU_API_KEY')))?.value
-      : undefined
-    if (apiKey === undefined || apiKey.length === 0) {
-      throw new LlmError(
-        '未配置智谱 API 密钥：图片理解需要 ZHIPU_API_KEY，请在设置 → 凭据（Credentials）中填写你自己的密钥（仅保存在本机）。',
-        'MISSING_CREDENTIAL',
-      )
+  const VISION_PROVIDERS: ReadonlyArray<{ keyEnv: string; baseURL: string; model: string }> = [
+    { keyEnv: 'ZHIPU_API_KEY', baseURL: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4.6v-flash' },
+    { keyEnv: 'OPENAI_API_KEY', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+    { keyEnv: 'GEMINI_API_KEY', baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.0-flash' },
+    { keyEnv: 'DASHSCOPE_API_KEY', baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-vl-plus' },
+    { keyEnv: 'MOONSHOT_API_KEY', baseURL: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k-vision-preview' },
+    { keyEnv: 'OPENROUTER_API_KEY', baseURL: 'https://openrouter.ai/api/v1', model: 'qwen/qwen2.5-vl-72b-instruct' },
+  ]
+  const VISION_DESCRIBE_PROMPT = '请仔细查看这张图片，用中文详细描述图片中的全部内容（包括文字、布局、对象、颜色、风格等所有可见细节）。'
+
+  const analyzeWithProvider = async (
+    provider: { keyEnv: string; baseURL: string; model: string },
+    apiKey: string,
+    imageUrl: string,
+  ): Promise<string | null> => {
+    try {
+      const response = await fetch(`${provider.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: provider.model,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: imageUrl } },
+              { type: 'text', text: VISION_DESCRIBE_PROMPT },
+            ],
+          }],
+          max_tokens: 2048,
+        }),
+        signal: AbortSignal.timeout(60000),
+      })
+      if (!response.ok) return null
+      const body = await response.json() as { choices?: Array<{ message?: { content?: unknown } }> }
+      const description = body?.choices?.[0]?.message?.content
+      return typeof description === 'string' && description.length > 0 ? description : null
+    } catch {
+      return null
     }
+  }
+
+  const analyzeImage = async (ref: ImageAttachmentRef): Promise<string | null> => {
     const attachments = ctx.get('attachments')
     if (attachments === undefined) return null
     let stored: { data: Uint8Array }
@@ -276,31 +312,29 @@ export function apply(ctx: Context, config: Config): void {
       return null
     }
     const mediaType = ref.mediaType ?? 'image/png'
-    let body: { choices?: Array<{ message?: { content?: unknown } }> }
-    try {
-      const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: 'glm-4.6v-flash',
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image_url', image_url: { url: `data:${mediaType};base64,${Buffer.from(stored.data).toString('base64')}` } },
-              { type: 'text', text: '请仔细查看这张图片，用中文详细描述图片中的全部内容（包括文字、布局、对象、颜色、风格等所有可见细节）。' },
-            ],
-          }],
-          max_tokens: 2048,
-        }),
-        signal: AbortSignal.timeout(60000),
-      })
-      if (!response.ok) return null
-      body = await response.json() as { choices?: Array<{ message?: { content?: unknown } }> }
-    } catch {
-      return null
+    const imageUrl = `data:${mediaType};base64,${Buffer.from(stored.data).toString('base64')}`
+    const credentials = ctx.get('credentials')
+    const failures: string[] = []
+    for (const provider of VISION_PROVIDERS) {
+      let apiKey: string | undefined
+      if (credentials !== undefined) {
+        apiKey = (await credentials.resolve(credentialRef(provider.keyEnv)))?.value
+      }
+      if (apiKey === undefined || apiKey.length === 0) continue
+      const description = await analyzeWithProvider(provider, apiKey, imageUrl)
+      if (description !== null) return description
+      failures.push(`${provider.keyEnv}/${provider.model}`)
     }
-    const description = body?.choices?.[0]?.message?.content
-    return typeof description === 'string' && description.length > 0 ? description : null
+    if (failures.length > 0) {
+      throw new LlmError(
+        `图片分析失败：已配置的视觉模型均未成功（${failures.join('、')}）。请检查密钥有效性，或在设置 → 凭据中更换/新增视觉提供商密钥。`,
+        'UNSUPPORTED_CONTENT',
+      )
+    }
+    throw new LlmError(
+      '未配置视觉模型密钥：图片理解需要任一视觉提供商密钥（ZHIPU_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY / DASHSCOPE_API_KEY / MOONSHOT_API_KEY / OPENROUTER_API_KEY），请在设置 → 凭据（Credentials）中填写你自己的密钥（仅保存在本机）。',
+      'MISSING_CREDENTIAL',
+    )
   }
   const bridgeMessages = async (messages: Message[]): Promise<Message[]> => {
     let bridged: Message[] | null = null

@@ -3,7 +3,11 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import YAML from 'yaml'
-import { ensureStudioThemeInstalled, mergedPatchPath } from '../src/main/studio-local'
+import {
+  ensureStudioThemeInstalled,
+  mergedPatchPath,
+  migrateLegacyUserData
+} from '../src/main/studio-local'
 
 async function makeTempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'studio-local-test-'))
@@ -102,6 +106,53 @@ describe('ensureStudioThemeInstalled', () => {
       // Same version: the user-visible marker must survive (no re-copy).
       const content = await readFile(join(destination, 'lib', 'client.js'), 'utf8')
       expect(content).toContain('user-edit')
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('migrateLegacyUserData', () => {
+  it('copies the legacy dsh-desktop user data once into the new location', async () => {
+    const dir = await makeTempDir()
+    try {
+      const appData = join(dir, 'appData')
+      const legacy = join(appData, 'dsh-desktop')
+      const userData = join(appData, 'deepseek-harness-studio')
+      await mkdir(join(legacy, 'harness', 'credentials'), { recursive: true })
+      await writeFile(join(legacy, 'harness', 'credentials', 'keys.json'), '{"secret":"local-only"}')
+
+      await migrateLegacyUserData(userData, appData)
+
+      const migrated = await readFile(
+        join(userData, 'harness', 'credentials', 'keys.json'),
+        'utf8'
+      )
+      expect(migrated).toBe('{"secret":"local-only"}')
+      // Legacy stays untouched.
+      expect(await readFile(join(legacy, 'harness', 'credentials', 'keys.json'), 'utf8')).toBe(
+        '{"secret":"local-only"}'
+      )
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('does nothing when the new user data already exists', async () => {
+    const dir = await makeTempDir()
+    try {
+      const appData = join(dir, 'appData')
+      const legacy = join(appData, 'dsh-desktop')
+      const userData = join(appData, 'deepseek-harness-studio')
+      await mkdir(join(legacy, 'harness'), { recursive: true })
+      await writeFile(join(legacy, 'harness', 'old.txt'), 'legacy')
+      await mkdir(join(userData, 'harness'), { recursive: true })
+      await writeFile(join(userData, 'harness', 'new.txt'), 'new')
+
+      await migrateLegacyUserData(userData, appData)
+
+      // New data wins; legacy file must not leak in.
+      await expect(readFile(join(userData, 'harness', 'old.txt'), 'utf8')).rejects.toThrow()
     } finally {
       await rm(dir, { recursive: true, force: true })
     }

@@ -9,10 +9,12 @@ import YAML from 'yaml'
  * dsh-desktop does not have, so subtree pulls can never conflict with it.
  * It wires the two Studio-specific pieces that upstream does not know about:
  *  1. the built-in Aqua theme (vendored under vendor/@deepseek-ai/dsh-client-ui-aqua),
- *  2. the local composition patch (build/dsh-local.patch.yml).
+ *  2. the local composition patch (build/dsh-local.patch.yml),
+ *  3. one-time migration of legacy DSH Desktop user data (credentials, sessions).
  */
 
 const THEME_PACKAGE = '@deepseek-ai/dsh-client-ui-aqua'
+const LEGACY_USER_DATA_DIR = 'dsh-desktop'
 
 function readVersion(packageJsonPath: string): string | undefined {
   try {
@@ -36,8 +38,7 @@ function readVersion(packageJsonPath: string): string | undefined {
 export async function ensureStudioThemeInstalled(
   dshHome: string,
   themeSource: string
-): Promise<void> {
-  const destination = join(dshHome, 'profiles', 'node_modules', THEME_PACKAGE)
+): Promise<void> {  const destination = join(dshHome, 'profiles', 'node_modules', THEME_PACKAGE)
   try {
     const sourceVersion = readVersion(join(themeSource, 'package.json'))
     const destinationVersion = readVersion(join(destination, 'package.json'))
@@ -55,6 +56,33 @@ export async function ensureStudioThemeInstalled(
     cpSync(themeSource, destination, { recursive: true })
   } catch (error) {
     console.warn('[studio] failed to install theme, continuing without it:', error)
+  }
+}
+
+/**
+ * One-time migration of the legacy official DSH Desktop user data so the
+ * Studio release inherits locally stored credentials (API keys), sessions,
+ * profiles and plugins. The official app stores everything under
+ * <appData>/dsh-desktop; the Studio app uses <appData>/deepseek-harness-studio
+ * (rebranded identity), so without this step a first run would look like a
+ * fresh installation.
+ *
+ * The copy happens only when the Studio data directory does not exist yet;
+ * it never touches the legacy directory (the old app keeps working) and it is
+ * non-fatal: if the copy fails (e.g. the legacy app is running and holds file
+ * locks), the app still starts with fresh data and the user can retry later
+ * or migrate manually.
+ */
+export async function migrateLegacyUserData(userData: string, appData: string): Promise<void> {
+  const legacy = join(appData, LEGACY_USER_DATA_DIR)
+  try {
+    if (existsSync(userData)) return
+    if (!existsSync(legacy)) return
+    mkdirSync(dirname(userData), { recursive: true })
+    cpSync(legacy, userData, { recursive: true })
+    console.log(`[studio] migrated legacy user data from ${legacy}`)
+  } catch (error) {
+    console.warn('[studio] legacy user-data migration failed, continuing with fresh data:', error)
   }
 }
 
