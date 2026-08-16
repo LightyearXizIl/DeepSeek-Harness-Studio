@@ -1,6 +1,6 @@
 {
   "name": "deepseek-harness-studio",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A cross-platform desktop shell for DeepSeek Harness, with vision bridge, built-in Aqua theme and automatic upstream sync.",
   "private": true,
   "type": "module",
