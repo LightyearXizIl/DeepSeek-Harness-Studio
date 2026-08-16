@@ -350,7 +350,8 @@ async function bootstrap(): Promise<void> {
     dshPatchPath: mergedPatchPath(
       desktopResourcePath('deepseek-harness-studio.patch.yml'),
       desktopResourcePath('dsh-local.patch.yml'),
-      app.getPath('userData')
+      app.getPath('userData'),
+      dshHome
     ),
     dshHome,
     logPath: join(app.getPath('logs'), 'harness.log'),

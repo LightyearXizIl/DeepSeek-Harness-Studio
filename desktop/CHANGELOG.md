@@ -4,6 +4,16 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.2] - 2026-08-16
+
+### 修复
+
+- **修复启动崩溃（重要）**：从官方 DSH Desktop 迁移数据后，旧版数据中的
+  `cordis.patch.yml` 已注册过 `ui-aqua`，与新版内置注册冲突，导致
+  `duplicate loader entry id: ui-aqua`，Harness 无法启动（exit code 1）。
+  现在启动时合并补丁会**自动去重**：用户数据中已注册的内置插件（ui-aqua /
+  ui-studio-update）不再重复插入，已迁移用户升级后直接可用，无需清理数据。
+
 ## [0.0.1] - 2026-08-16
 
 ### 新增

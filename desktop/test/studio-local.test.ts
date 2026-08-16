@@ -20,6 +20,7 @@ describe('mergedPatchPath', () => {
       const official = join(dir, 'official.yml')
       const local = join(dir, 'local.yml')
       const userData = join(dir, 'userData')
+      const dshHome = join(dir, 'dshHome')
       await mkdir(userData, { recursive: true })
       await writeFile(official, '- id: directory-picker\n  disabled: true\n')
       await writeFile(
@@ -27,7 +28,7 @@ describe('mergedPatchPath', () => {
         '- insert:\n    - id: ui-aqua\n      name: \'@deepseek-ai/dsh-client-ui-aqua\'\n'
       )
 
-      const merged = mergedPatchPath(official, local, userData)
+      const merged = mergedPatchPath(official, local, userData, dshHome)
       expect(merged).toBe(join(userData, 'deepseek-harness-studio.merged.patch.yml'))
 
       const parsed = YAML.parse(await readFile(merged, 'utf8')) as Array<Record<string, unknown>>
@@ -39,16 +40,48 @@ describe('mergedPatchPath', () => {
     }
   })
 
+  it('drops local entries already registered by the profile patch layer', async () => {
+    const dir = await makeTempDir()
+    try {
+      const official = join(dir, 'official.yml')
+      const local = join(dir, 'local.yml')
+      const userData = join(dir, 'userData')
+      const dshHome = join(dir, 'dshHome')
+      await mkdir(join(userData, 'deepseek-harness-studio'), { recursive: true })
+      await mkdir(join(dshHome, 'profiles', 'web'), { recursive: true })
+      await writeFile(official, '- id: directory-picker\n  disabled: true\n')
+      await writeFile(
+        local,
+        '- insert:\n    - id: ui-aqua\n      name: \'@deepseek-ai/dsh-client-ui-aqua\'\n    - id: ui-studio-update\n      name: \'@deepseek-ai/dsh-client-ui-studio-update\'\n'
+      )
+      // The migrated profile already registers ui-aqua.
+      await writeFile(
+        join(dshHome, 'profiles', 'web', 'cordis.patch.yml'),
+        '- insert:\n    - id: ui-aqua\n      name: \'@deepseek-ai/dsh-client-ui-aqua\'\n'
+      )
+
+      const merged = mergedPatchPath(official, local, userData, dshHome)
+      const parsed = YAML.parse(await readFile(merged, 'utf8')) as Array<Record<string, unknown>>
+      const insert = (parsed[1] as { insert: Array<{ id: string }> }).insert
+      const ids = insert.map((row) => row.id)
+      expect(ids).not.toContain('ui-aqua')
+      expect(ids).toContain('ui-studio-update')
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('falls back to the official patch when the local one is missing', async () => {
     const dir = await makeTempDir()
     try {
       const official = join(dir, 'official.yml')
       const missing = join(dir, 'missing.yml')
       const userData = join(dir, 'userData')
+      const dshHome = join(dir, 'dshHome')
       await mkdir(userData, { recursive: true })
       await writeFile(official, '- id: directory-picker\n  disabled: true\n')
 
-      expect(mergedPatchPath(official, missing, userData)).toBe(official)
+      expect(mergedPatchPath(official, missing, userData, dshHome)).toBe(official)
     } finally {
       await rm(dir, { recursive: true, force: true })
     }
@@ -113,7 +146,7 @@ describe('ensureStudioPluginInstalled', () => {
 })
 
 describe('migrateLegacyUserData', () => {
-  it('copies the legacy dsh-desktop user data once into the new location', async () => {
+  it('copies the legacy dsh-desktop harness data once into the new location', async () => {
     const dir = await makeTempDir()
     try {
       const appData = join(dir, 'appData')
@@ -121,6 +154,8 @@ describe('migrateLegacyUserData', () => {
       const userData = join(appData, 'deepseek-harness-studio')
       await mkdir(join(legacy, 'harness', 'credentials'), { recursive: true })
       await writeFile(join(legacy, 'harness', 'credentials', 'keys.json'), '{"secret":"local-only"}')
+      // Electron/Chromium state next to the legacy harness must not follow.
+      await writeFile(join(legacy, 'Preferences'), 'chromium')
 
       await migrateLegacyUserData(userData, appData)
 
@@ -129,6 +164,8 @@ describe('migrateLegacyUserData', () => {
         'utf8'
       )
       expect(migrated).toBe('{"secret":"local-only"}')
+      // Only the harness subdirectory is copied.
+      await expect(readFile(join(userData, 'Preferences'), 'utf8')).rejects.toThrow()
       // Legacy stays untouched.
       expect(await readFile(join(legacy, 'harness', 'credentials', 'keys.json'), 'utf8')).toBe(
         '{"secret":"local-only"}'
@@ -138,7 +175,29 @@ describe('migrateLegacyUserData', () => {
     }
   })
 
-  it('does nothing when the new user data already exists', async () => {
+  it('still migrates when Electron already created the empty userData directory', async () => {
+    const dir = await makeTempDir()
+    try {
+      const appData = join(dir, 'appData')
+      const legacy = join(appData, 'dsh-desktop')
+      const userData = join(appData, 'deepseek-harness-studio')
+      await mkdir(join(legacy, 'harness', 'sessions'), { recursive: true })
+      await writeFile(join(legacy, 'harness', 'sessions', 'old.json'), 'legacy')
+      // Electron creates userData on startup; only the harness subdirectory
+      // is the already-migrated marker.
+      await mkdir(userData, { recursive: true })
+
+      await migrateLegacyUserData(userData, appData)
+
+      expect(await readFile(join(userData, 'harness', 'sessions', 'old.json'), 'utf8')).toBe(
+        'legacy'
+      )
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('does nothing when the new harness data already exists', async () => {
     const dir = await makeTempDir()
     try {
       const appData = join(dir, 'appData')
