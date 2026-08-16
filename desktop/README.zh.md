@@ -93,6 +93,12 @@ npm run package:win   # 或 package:mac / package:mac:arm64
 
 见 [desktop/CHANGELOG.md](desktop/CHANGELOG.md)。
 
+## 交接与维护
+
+项目总交接手册（架构、日常操作 SOP、发版流程、本地功能维护、冲突处理）见
+[docs/HANDOVER.md](docs/HANDOVER.md)；整合架构与决策记录见
+[docs/INTEGRATION.md](docs/INTEGRATION.md)。
+
 ## 许可证
 
 MIT —— 见 [LICENSE](LICENSE)。内置的 Aqua 主题同样为 MIT 许可。

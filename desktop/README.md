@@ -103,6 +103,13 @@ upstream sync workflow and the local-feature protection rules.
 
 See [desktop/CHANGELOG.md](desktop/CHANGELOG.md).
 
+## Handover & maintenance
+
+The full handover manual (architecture, daily SOPs, release flow, local-feature
+maintenance, conflict handling) lives in [docs/HANDOVER.md](docs/HANDOVER.md);
+the integration design and decisions are in
+[docs/INTEGRATION.md](docs/INTEGRATION.md).
+
 ## License
 
 MIT — see [LICENSE](LICENSE). The bundled Aqua theme is MIT licensed as well.
