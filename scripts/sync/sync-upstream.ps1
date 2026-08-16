@@ -17,6 +17,9 @@ param(
   [switch]$CheckOnly
 )
 
+# PS7+: native commands writing to stderr must NOT abort the script
+# (git progress lines go to stderr). We rely on $LASTEXITCODE instead.
+$PSNativeCommandUseErrorActionPreference = $false
 $ErrorActionPreference = 'Stop'
 $Repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)   # scripts/sync -> repo root
 
@@ -24,6 +27,9 @@ function Write-Step($m) { Write-Host "==> $m" -ForegroundColor Cyan }
 function Write-OK($m)   { Write-Host "    $m" -ForegroundColor Green }
 function Write-Warn($m) { Write-Host "    $m" -ForegroundColor Yellow }
 function Write-Bad($m)  { Write-Host "    $m" -ForegroundColor Red }
+
+$SUMMARY = Join-Path $PSScriptRoot 'UPDATE-SUMMARY.md'
+$CONFLICT = Join-Path $PSScriptRoot 'CONFLICT-REPORT.md'
 
 # ---- 6.4 protected local features -------------------------------------------
 $protectedFiles = @(
@@ -77,7 +83,7 @@ function Write-ConflictReport([string]$channel, [string[]]$files, [string[]]$det
     '| --- | --- | --- | --- |'
     ($files | ForEach-Object { "| `$_ | [ ] | [ ] | [ ] |" })
   )
-  $report -join "`n" | Set-Content -Path (Join-Path $Repo 'CONFLICT-REPORT.md') -Encoding UTF8
+  $report -join "`n" | Set-Content -Path $CONFLICT -Encoding UTF8
 }
 
 # ---- 1. clean tree check -----------------------------------------------------
@@ -105,7 +111,7 @@ if ([int]$newHarness[0] -eq 0 -and [int]$newDesktop[0] -eq 0) {
   Write-OK 'Both upstreams are up to date.'
   if (-not $CheckOnly) {
     "No updates. Checked $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" |
-      Set-Content -Path (Join-Path $Repo 'UPDATE-SUMMARY.md') -Encoding UTF8
+      Set-Content -Path $SUMMARY -Encoding UTF8
   }
   exit 0
 }
@@ -185,5 +191,5 @@ if ($hits.Count -gt 0) {
 }
 
 # ---- 6. summary --------------------------------------------------------------
-$summary | Set-Content -Path (Join-Path $Repo 'UPDATE-SUMMARY.md') -Encoding UTF8
+$summary | Set-Content -Path $SUMMARY -Encoding UTF8
 Write-OK "UPDATE-SUMMARY.md written. Next: run tests/build, then push to origin."
