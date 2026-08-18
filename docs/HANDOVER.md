@@ -100,7 +100,7 @@ pnpm run build:lib:host                          # 根：harness 全仓构建（
 | 功能 | 位置 | 维护注意 |
 | --- | --- | --- |
 | **视觉桥接（源码版）** | `packages/llm/llm-deepseek/src/index.ts`、`adapter.ts`；`packages/host/apiproxy/src/api-proxy.ts` | ⚠️ 与官方高频冲突区；官方动这些文件时**必须同步桌面补丁**（见下） |
-| **视觉桥接（桌面版）** | `desktop/patches/@deepseek-ai+dsh-llm-deepseek+0.1.0-rc.6.patch`、`…dsh-host-apiproxy…patch` | 补丁针对 npm 包编译产物；上游 npm 升版后需重新生成（改 node_modules 对应代码 → `npm exec patch-package @deepseek-ai/dsh-llm-deepseek`） |
+| **视觉桥接（桌面版）** | `desktop/patches/@deepseek-ai+dsh-llm-deepseek+0.1.0-rc.7.patch`、`…dsh-host-apiproxy…patch` | 补丁针对 npm 包编译产物；上游 npm 升版后需重新生成（改 node_modules 对应代码 → `npm exec patch-package @deepseek-ai/dsh-llm-deepseek`） |
 | **Aqua 主题** | `packages/client/ui-aqua/`（源码）+ `desktop/vendor/@deepseek-ai/dsh-client-ui-aqua/`（内置）+ 注册于 `dsh-local.patch.yml` | 两处副本需保持一致；主题作者仓库更新时同步 |
 | **设置 → 更新页** | `packages/client/ui-studio-update/` + `desktop/vendor/…/dsh-client-ui-studio-update/` | 同上；桌面侧配套：`updates:check` IPC（update-manager.ts）+ preload 桥（window.studioUpdate） |
 | **旧数据自动迁移** | `desktop/src/main/studio-local.ts`（migrateLegacyUserData） | 首启把 `%APPDATA%\dsh-desktop` 复制到 `%APPDATA%\deepseek-harness-studio`（仅一次） |

@@ -4,6 +4,22 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.3] - 2026-08-18
+
+### 更新
+
+- **Harness 升级到 0.1.0-rc.7**：桌面端全部 `@deepseek-ai/dsh-*` 依赖 rc.6 → rc.7，
+  随官方 DSH Desktop 上游同步合并（Channel B），含原生目录选择器组合与安装器增强
+- **Aqua 主题 v1.3.0**：从主题上游同步最新版，并移植到 rc.7 的 slot/store 契约；
+  修复 rc.7 下主题不可用的问题，新增壁纸、字标徽章等效果
+- **视觉桥接补丁随迁 rc.7**：`dsh-llm-deepseek` 与 `dsh-host-apiproxy` 补丁
+  重新生成到 rc.7 产物，本地功能不因升级丢失
+
+### 修复
+
+- **设置 → 更新插件**：通过 invariant 与 face 注册合规检查
+- **同步脚本**：合并成功的 stdout 不再被误判为冲突
+
 ## [0.0.2] - 2026-08-16
 
 ### 修复
@@ -57,4 +73,5 @@
 - 视觉桥接暂不支持 Anthropic 原生消息格式（可用 OpenRouter 等 OpenAI 兼容端点替代）
 - 首次发布为 Windows x64；macOS 构建已配置，待发布验证
 
+[0.0.3]: https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases/tag/v0.0.3
 [0.0.1]: https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases/tag/v0.0.1
