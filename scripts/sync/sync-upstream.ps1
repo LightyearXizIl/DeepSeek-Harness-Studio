@@ -62,7 +62,10 @@ function Invoke-Git([string[]]$arguments) {
   # Do NOT merge stderr (2>&1): under Windows PowerShell 5.1 that turns git's
   # progress lines into ErrorRecords that abort with $ErrorActionPreference=Stop.
   # Let stderr pass through to the console and judge success via $LASTEXITCODE.
-  & git -C $Repo @arguments
+  # Native stdout must not leak into the return value either: `git merge` prints
+  # a success line ("Merge made by the 'ort' strategy."), which would make
+  # `$code` an array and the `-ne 0` comparison truthy - a false conflict report.
+  $null = & git -C $Repo @arguments
   return $LASTEXITCODE
 }
 
@@ -81,7 +84,7 @@ function Write-ConflictReport([string]$channel, [string[]]$files, [string[]]$det
     'resolve and commit manually (or ask the agent).'
     ''
     '## Conflicted files'
-    ($files | ForEach-Object { "- `$_" })
+    ($files | ForEach-Object { "- $_" })
     ''
     '## Local feature protection'
     ($details | ForEach-Object { "- $_" })
@@ -89,7 +92,7 @@ function Write-ConflictReport([string]$channel, [string[]]$files, [string[]]$det
     '## Decision checklist (one per file)'
     '| File | Take upstream | Keep local | Manual merge |'
     '| --- | --- | --- | --- |'
-    ($files | ForEach-Object { "| `$_ | [ ] | [ ] | [ ] |" })
+    ($files | ForEach-Object { "| $_ | [ ] | [ ] | [ ] |" })
   )
   $report -join "`n" | ForEach-Object { Write-Utf8File $CONFLICT $_ }
 }
