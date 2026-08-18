@@ -13,6 +13,8 @@
     "**/.node-next-types-*/**",
     "website/.generated/**",
     "vendor/**",
+    "desktop/vendor/**",
+    "packages/client/ui-aqua/**",
     "native/**",
     "**/*.js",
     "**/*.mjs",

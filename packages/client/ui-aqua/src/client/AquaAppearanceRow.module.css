@@ -1,14 +1,29 @@
-/* Aqua row in the General settings section: controls that follow the
- * Appearance cubes directly (no row title of their own), same hairline
- * separator rhythm as the shipped rows; the section column strips the last
- * one. Nothing renders while the master switch is off. */
+/* Aqua row in the General settings section: four titled sub-groups (mode /
+ * glass material / background / decorations) that follow the Appearance
+ * cubes directly, same hairline separator rhythm as the shipped rows; the
+ * section column strips the last one. Nothing renders while the master
+ * switch is off. */
 
 .group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
   padding: 8px 0 16px;
   border-bottom: 1px solid var(--dsw-alias-border-l2);
+}
+
+/* One titled sub-group: title over its control stack. */
+.subGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subTitle {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
 }
 
 /* Controls stack: one column of rows and knobs. */
@@ -33,11 +48,28 @@
   color: var(--dsw-alias-label-secondary);
 }
 
+/* Short inline label next to a second toggle in the same row (critters). */
+.inlineLabel {
+  flex: none;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
+}
+
 /* Hints under a row/knob: indented to the control column (label 92 + gap 10)
  * so every explanation lines up with the control it describes. */
 .rowHint {
   margin-top: -4px;
   margin-left: 102px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* Full-width hint under a label-less row (the mode hint sits under the
+ * segmented control, which starts at the group's left edge). */
+.groupHint {
+  margin-top: -4px;
   font-size: 12px;
   line-height: 18px;
   color: var(--dsw-alias-label-tertiary);
@@ -196,5 +228,22 @@
 }
 
 .pickButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+/* Delete-wallpaper ghost button: error-tinted, next to the picker. */
+.deleteButton {
+  height: 26px;
+  padding: 0 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-error);
+  cursor: pointer;
+}
+
+.deleteButton:hover {
   background: var(--dsw-alias-interactive-bg-hover);
 }

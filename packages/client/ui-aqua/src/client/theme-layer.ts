@@ -2,10 +2,9 @@
  * Aqua theme layer: one toggleable visual skin over the whole Web surface.
  * Everything this layer owns is an effect — token overrides ride the theme
  * service's override stack, the CSS hooks ride a `data-dsh-aqua` attribute on
- * <html> (the stylesheet only applies under it), the hero copy rides a
- * MutationObserver that decorates new [data-hero-headline] mounts — so
- * switching the flag off (or unloading the plugin) restores the stock UI
- * exactly: no residue, no reload.
+ * <html> (the stylesheet only applies under it), the ambient scene and page
+ * fades are mounted/removed with the layer — so switching the flag off (or
+ * unloading the plugin) restores the stock UI exactly: no residue, no reload.
  *
  * The enable flag persists in localStorage: a client-only visual preference
  * (like the selected-session key), written and read by this plugin alone.
@@ -16,9 +15,13 @@ import type { ThemeTokenOverrides } from '@deepseek-ai/dsh-client-ui-theme/clien
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import { ensureAmbientScene, removeAmbientScene, ensurePageFades, removePageFades } from './critters.ts'
 import { attachFluidShader, SITE_FLUID_PARAMS, type FluidParams, type FluidShaderHandle } from './fluid-shader.ts'
+import { fluidToneColors, HUE_BASE } from './fluid-tones.ts'
+import { deleteVideoBlob, loadVideoBlob, loadVideoHandle } from './wallpaper-store.ts'
 import { attachFluidInteractions } from './fluid-interactions.ts'
 import { startSeamStamper } from './seam-stamper.ts'
 import { mountWhale, type WhaleHandle } from './whale.ts'
+import { mountMesh, type MeshHandle } from './mesh.ts'
+import { startSpotlight, SPOTLIGHT_ATTRIBUTE, PRESS_ATTRIBUTE } from './spotlight.ts'
 
 /** html attribute selecting the Aqua layer: CSS hooks and ambient effects. */
 export const AQUA_ATTRIBUTE = 'data-dsh-aqua'
@@ -219,8 +222,10 @@ export interface AquaSettings {
   blur: number
   /** Glass fill opacity, 0-100 (50 = the shipped look; drives the frost multiplier). */
   frost: number
-  /** Fluid hue shift, degrees. */
+  /** Fluid hue, degrees (0-360, continuous). */
   fluidHue: number
+  /** Fluid depth, 0-100 (0 = deep saturated, 100 = pale light, continuous). */
+  fluidDepth: number
   /** Background brightness, 0-100 (0 = pure black, 50 = transparent, 100 = pure white). */
   bgBrightness: number
   /** Backdrop source: the living fluid board or a custom wallpaper. */
@@ -229,23 +234,43 @@ export interface AquaSettings {
   wallpaper: string
   /** Particle whale in the chat area center (the harness hero fish). */
   whale: boolean
+  /** Ambient marine life (fish / bubbles / plankton). */
+  critters: boolean
+  /** Interactive mesh (the site's dot-grid with pointer repel). */
+  mesh: boolean
+  /** Cursor spotlight glow that follows the pointer over the glass panes. */
+  spotlight: boolean
+  /** Hover press-down: the pane under the cursor sinks a touch (tactile depth). */
+  press: boolean
   /** Wallpaper blur radius, px. */
   wallpaperBlur: number
   /** Wallpaper frost veil, 0-100. */
   wallpaperFrost: number
+  /** Video wallpaper blur radius, px (0 = crisp, 40 = heavy acrylic). */
+  videoBlur: number
+  /** Video wallpaper brightness, 0-100 (100 = fully lit, 0 = deepest dim). */
+  videoBrightness: number
 }
 
+/** Shipped defaults — what a first-time install sees (the tuned look). */
 const SETTINGS_DEFAULTS: AquaSettings = {
   mode: 'mica',
-  blur: 2,
-  frost: 20,
-  fluidHue: 316,
+  blur: 20,
+  frost: 7,
   bgBrightness: 50,
   background: 'fluid',
   wallpaper: '',
   whale: true,
+  critters: true,
+  mesh: true,
+  spotlight: true,
+  press: true,
+  fluidHue: 320,
+  fluidDepth: 25,
   wallpaperBlur: 0,
   wallpaperFrost: 0,
+  videoBlur: 6,
+  videoBrightness: 45,
 }
 
 /** Numeric knob keys and their localStorage names. */
@@ -253,9 +278,12 @@ const NUMERIC_KEYS = {
   blur: 'dsh.ui-aqua.blur',
   frost: 'dsh.ui-aqua.frost',
   fluidHue: 'dsh.ui-aqua.fluidHue',
+  fluidDepth: 'dsh.ui-aqua.fluidDepth',
   bgBrightness: 'dsh.ui-aqua.bgBrightness',
   wallpaperBlur: 'dsh.ui-aqua.wallpaperBlur',
   wallpaperFrost: 'dsh.ui-aqua.wallpaperFrost',
+  videoBlur: 'dsh.ui-aqua.videoBlur',
+  videoBrightness: 'dsh.ui-aqua.videoBrightness',
 } as const
 type NumericKey = keyof typeof NUMERIC_KEYS
 
@@ -263,11 +291,15 @@ const MODE_KEY = 'dsh.ui-aqua.mode'
 const BACKGROUND_KEY = 'dsh.ui-aqua.background'
 const WALLPAPER_KEY = 'dsh.ui-aqua.wallpaper'
 const WHALE_KEY = 'dsh.ui-aqua.whale'
+const CRITTERS_KEY = 'dsh.ui-aqua.critters'
+const MESH_KEY = 'dsh.ui-aqua.mesh'
+const SPOTLIGHT_KEY = 'dsh.ui-aqua.spotlight'
+const PRESS_KEY = 'dsh.ui-aqua.press'
 
 /** Clamp a numeric knob into its sane range. */
 function clampSetting(key: NumericKey, value: number): number {
-  const max = key === 'blur' || key === 'wallpaperBlur' ? 40
-    : key === 'frost' || key === 'wallpaperFrost' || key === 'bgBrightness' ? 100
+  const max = key === 'blur' || key === 'wallpaperBlur' || key === 'videoBlur' ? 40
+    : key === 'frost' || key === 'wallpaperFrost' || key === 'bgBrightness' || key === 'videoBrightness' ? 100
       : 360
   return Number.isFinite(value) ? Math.min(max, Math.max(0, value)) : SETTINGS_DEFAULTS[key]
 }
@@ -367,25 +399,83 @@ function writeWhale(value: boolean): void {
   }
 }
 
-/** Fluid palettes: one unified full-screen water. Dark inverts the official
- *  light look with luminous accent cores; light keeps strong blue contrast. */
-const FLUID_PALETTES: Record<'light' | 'dark', FluidParams> = {
-  light: {
-    ...SITE_FLUID_PARAMS,
-    color1: '#5B8DE0',
-    color2: '#A9C6F5',
-    color3: '#FFFFFF',
-    distortion: 24,
-    swirl: 14,
-    offsetY: 40,
-  },
-  dark: {
-    ...SITE_FLUID_PARAMS,
-    color1: '#2D4F8D',
-    color2: '#101E38',
-    color3: '#0B1628',
-    offsetY: 40,
-  },
+/** Read the critters flag (absent means on). */
+function readCritters(): boolean {
+  try {
+    const raw = localStorage.getItem(CRITTERS_KEY)
+    return raw === null ? true : raw === 'true'
+  } catch {
+    return true
+  }
+}
+
+/** Persist the critters flag. */
+function writeCritters(value: boolean): void {
+  try {
+    localStorage.setItem(CRITTERS_KEY, String(value))
+  } catch {
+    /* in-memory state still applies for this tab */
+  }
+}
+
+/** Read the interactive-mesh flag (absent means on). */
+function readMesh(): boolean {
+  try {
+    const raw = localStorage.getItem(MESH_KEY)
+    return raw === null ? true : raw === 'true'
+  } catch {
+    return true
+  }
+}
+
+/** Persist the interactive-mesh flag. */
+function writeMesh(value: boolean): void {
+  try {
+    localStorage.setItem(MESH_KEY, String(value))
+  } catch {
+    /* in-memory state still applies for this tab */
+  }
+}
+
+/** Read the cursor-spotlight flag (absent means on). */
+function readSpotlight(): boolean {
+  try {
+    const raw = localStorage.getItem(SPOTLIGHT_KEY)
+    return raw === null ? true : raw === 'true'
+  } catch {
+    return true
+  }
+}
+
+/** Persist the cursor-spotlight flag. */
+function writeSpotlight(value: boolean): void {
+  try {
+    localStorage.setItem(SPOTLIGHT_KEY, String(value))
+  } catch {
+    /* in-memory state still applies for this tab */
+  }
+}
+
+/** Read the hover-press flag (absent means on). */
+function readPress(): boolean {
+  try {
+    // One-shot migration: the entrance-rise key from the earlier iteration
+    // never shipped — drop it so no stale preference lingers.
+    localStorage.removeItem('dsh.ui-aqua.entrance')
+    const raw = localStorage.getItem(PRESS_KEY)
+    return raw === null ? true : raw === 'true'
+  } catch {
+    return true
+  }
+}
+
+/** Persist the hover-press flag. */
+function writePress(value: boolean): void {
+  try {
+    localStorage.setItem(PRESS_KEY, String(value))
+  } catch {
+    /* in-memory state still applies for this tab */
+  }
 }
 
 /** Current scheme from the presenter-owned body attribute. */
@@ -396,8 +486,8 @@ function activeScheme(): 'light' | 'dark' {
 /**
  * Owns the Aqua layer lifecycle: reads the durable enable flag, and applies /
  * retracts every layer on change. Cross-tab flips arrive through the storage
- * event; the greeting observer and every subscription are released when the
- * plugin fiber is disposed.
+ * event; every subscription and mounted effect are released when the plugin
+ * fiber is disposed.
  */
 export class AquaLayer {
   private enabled = false
@@ -409,7 +499,13 @@ export class AquaLayer {
   private interactionDisposer: (() => void) | undefined
   private themeListener: (() => void) | undefined
   private seamDisposer: (() => void) | undefined
+  private spotlightDisposer: (() => void) | undefined
   private whaleHandle: WhaleHandle | undefined
+  private meshHandle: MeshHandle | undefined
+  /** Object URL of the current large-video wallpaper (revoked on replace). */
+  private videoObjectUrl: string | undefined
+  /** IndexedDB id backing the current object URL (guards against reloads). */
+  private videoBlobId: string | undefined
   private readonly ctx: Context
 
   /**
@@ -424,9 +520,9 @@ export class AquaLayer {
           this.sync()
         }
         const key = event.key
-        if (key !== null && (key in NUMERIC_KEYS || key === BACKGROUND_KEY || key === WALLPAPER_KEY || key === MODE_KEY || key === WHALE_KEY)) {
+        if (key !== null && (key in NUMERIC_KEYS || key === BACKGROUND_KEY || key === WALLPAPER_KEY || key === MODE_KEY || key === WHALE_KEY || key === CRITTERS_KEY || key === MESH_KEY || key === SPOTLIGHT_KEY || key === PRESS_KEY)) {
           this.reloadSettings()
-          if (this.enabled) { this.applySettings(); this.applyTokens(); this.syncWhale() }
+          if (this.enabled) { this.applySettings(); this.applyTokens(); this.applyFluidPalettes(); this.syncWhale() }
         }
       }
       window.addEventListener('storage', onStorage)
@@ -480,17 +576,32 @@ export class AquaLayer {
 
   /** Re-read every knob from localStorage into memory. */
   private reloadSettings(): void {
+    try {
+      // One-shot cleanup: knobs from reverted iterations never shipped.
+      localStorage.removeItem('dsh.ui-aqua.tilt')
+      localStorage.removeItem('dsh.ui-aqua.lens')
+      localStorage.removeItem('dsh.ui-aqua.fluidTone')
+    } catch {
+      /* ignore */
+    }
     this.settings = {
       mode: readMode(),
       blur: readSetting('blur'),
       frost: readSetting('frost'),
       fluidHue: readSetting('fluidHue'),
+      fluidDepth: readSetting('fluidDepth'),
       bgBrightness: readSetting('bgBrightness'),
       background: readBackground(),
       wallpaper: readWallpaper(),
       whale: readWhale(),
+      critters: readCritters(),
+      mesh: readMesh(),
+      spotlight: readSpotlight(),
+      press: readPress(),
       wallpaperBlur: readSetting('wallpaperBlur'),
       wallpaperFrost: readSetting('wallpaperFrost'),
+      videoBlur: readSetting('videoBlur'),
+      videoBrightness: readSetting('videoBrightness'),
     }
   }
 
@@ -528,13 +639,25 @@ export class AquaLayer {
     if (this.enabled) this.applySettings()
   }
 
-  /** Set the fluid hue shift (degrees). */
+  /** Set the fluid hue (degrees, continuous). */
   setFluidHue(value: number): void {
     const next = clampSetting('fluidHue', value)
     if (next === this.settings.fluidHue) return
     this.settings.fluidHue = next
     writeSetting('fluidHue', next)
-    if (this.enabled) this.applySettings()
+    if (this.enabled) {
+      this.applySettings()
+      this.applyFluidPalettes()
+    }
+  }
+
+  /** Set the fluid depth (0-100, continuous: deep ↔ pale). */
+  setFluidDepth(value: number): void {
+    const next = clampSetting('fluidDepth', value)
+    if (next === this.settings.fluidDepth) return
+    this.settings.fluidDepth = next
+    writeSetting('fluidDepth', next)
+    if (this.enabled) this.applyFluidPalettes()
   }
 
   /** Set the background brightness (0-100: 0 = pure black, 50 = transparent, 100 = pure white). */
@@ -554,10 +677,20 @@ export class AquaLayer {
     if (this.enabled) this.applySettings()
   }
 
-  /** Set the wallpaper image (a data URL; empty clears it). */
+  /** Set the wallpaper image (a data URL; empty clears it) or a large video
+   *  (`idb:<id>` marker whose blob lives in IndexedDB). */
   setWallpaper(value: string): void {
+    const previous = this.settings.wallpaper
     this.settings.wallpaper = value
     writeWallpaper(value)
+    if (previous.startsWith('idb:') && value !== previous) {
+      void deleteVideoBlob(previous.slice(4))
+    }
+    if (!value.startsWith('idb:') && this.videoObjectUrl !== undefined) {
+      URL.revokeObjectURL(this.videoObjectUrl)
+      this.videoObjectUrl = undefined
+      this.videoBlobId = undefined
+    }
     if (this.enabled) this.applySettings()
   }
 
@@ -567,6 +700,38 @@ export class AquaLayer {
     this.settings.whale = value
     writeWhale(value)
     if (this.enabled) this.syncWhale()
+  }
+
+  /** Set the ambient marine-life flag (fish / bubbles / plankton). */
+  setCritters(value: boolean): void {
+    if (value === this.settings.critters) return
+    this.settings.critters = value
+    writeCritters(value)
+    if (this.enabled) this.applySettings()
+  }
+
+  /** Set the interactive-mesh flag (dot-grid decoration). */
+  setMesh(value: boolean): void {
+    if (value === this.settings.mesh) return
+    this.settings.mesh = value
+    writeMesh(value)
+    if (this.enabled) this.syncMesh()
+  }
+
+  /** Set the cursor-spotlight flag (pointer-tracking glass glow). */
+  setSpotlight(value: boolean): void {
+    if (value === this.settings.spotlight) return
+    this.settings.spotlight = value
+    writeSpotlight(value)
+    if (this.enabled) this.applySettings()
+  }
+
+  /** Set the hover-press flag (pane sinks a touch under the cursor). */
+  setPress(value: boolean): void {
+    if (value === this.settings.press) return
+    this.settings.press = value
+    writePress(value)
+    if (this.enabled) this.applySettings()
   }
 
   /** Set the wallpaper blur radius (px). */
@@ -587,6 +752,35 @@ export class AquaLayer {
     if (this.enabled) this.applySettings()
   }
 
+  /** Set the video wallpaper blur radius (px). */
+  setVideoBlur(value: number): void {
+    const next = clampSetting('videoBlur', value)
+    if (next === this.settings.videoBlur) return
+    this.settings.videoBlur = next
+    writeSetting('videoBlur', next)
+    if (this.enabled) this.applySettings()
+  }
+
+  /** Set the video wallpaper brightness (0-100, 100 = fully lit). */
+  setVideoBrightness(value: number): void {
+    const next = clampSetting('videoBrightness', value)
+    if (next === this.settings.videoBrightness) return
+    this.settings.videoBrightness = next
+    writeSetting('videoBrightness', next)
+    if (this.enabled) this.applySettings()
+  }
+
+  /** After the user re-grants file access (选择视频 click on an fsa: video),
+   *  drop the mount guard and re-apply so the file is re-read and played. */
+  authorizeVideo(): void {
+    if (this.videoObjectUrl !== undefined) {
+      URL.revokeObjectURL(this.videoObjectUrl)
+      this.videoObjectUrl = undefined
+    }
+    this.videoBlobId = undefined
+    if (this.enabled) this.applySettings()
+  }
+
   private sync(): void {
     if (this.enabled) this.mount()
     else this.unmount()
@@ -603,9 +797,19 @@ export class AquaLayer {
     style.setProperty('--dsh-aqua-frost', String(Math.min(this.settings.frost / 50, 1.4)))
     // The new-session button's frost rides the same knob, +20 points.
     style.setProperty('--dsh-aqua-surface-frost', String(Math.min((this.settings.frost + 20) / 50, 1.4)))
-    style.setProperty('--dsh-aqua-fluid-hue', `${this.settings.fluidHue}deg`)
+    // The cursor glow follows the fluid tone — same hue as the bloom stops,
+    // so 色调 320 glows the same cyan-blue as the water.
+    const glowHue = ((this.settings.fluidHue + HUE_BASE) % 360 + 360) % 360
+    style.setProperty('--dsh-aqua-spot-color', this.dark
+      ? `hsla(${glowHue}, 90%, 62%, 0.17)`
+      : `hsla(${glowHue}, 90%, 45%, 0.16)`)
     style.setProperty('--dsh-aqua-wallpaper-blur', `${this.settings.wallpaperBlur}px`)
     style.setProperty('--dsh-aqua-wallpaper-frost', String(this.settings.wallpaperFrost / 100))
+    // Video wallpaper: blur rides the video's own filter; brightness drives
+    // the scrim veil's alpha (100 = fully lit / no veil, 0 = deepest dim,
+    // capped at 0.65 so the film never goes fully black).
+    style.setProperty('--dsh-aqua-video-blur', `${this.settings.videoBlur}px`)
+    style.setProperty('--dsh-aqua-video-dim', String(((100 - this.settings.videoBrightness) / 100) * 0.65))
     // Background brightness: dark mode darkens (0 = pure black, 50 = off),
     // light mode brightens (50 = off, 100 = pure white) — the knob's range
     // and the overlay direction both follow the resolved scheme.
@@ -619,17 +823,112 @@ export class AquaLayer {
     document.documentElement.toggleAttribute('data-dsh-float', !compat)
     document.documentElement.toggleAttribute('data-dsh-compat', compat)
 
+    // Cursor spotlight and hover press ride the floating glass only —
+    // compat keeps the stock layout, so neither effect applies there.
+    document.documentElement.toggleAttribute(SPOTLIGHT_ATTRIBUTE, !compat && this.settings.spotlight)
+    document.documentElement.toggleAttribute(PRESS_ATTRIBUTE, !compat && this.settings.press)
+
     // Backdrop source: flip the ambient container between fluid and wallpaper.
     const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
     if (ambient !== null) ambient.dataset.background = this.settings.background
+    if (ambient !== null) ambient.dataset.critters = this.settings.critters ? 'on' : 'off'
+    // The wallpaper may be an image or a video: images and small videos are
+    // data URLs; large videos are `idb:<id>` markers (blob in IndexedDB);
+    // File System Access videos are `fsa:<name>` markers (the handle lives
+    // in IndexedDB and re-reads the original file).
+    const wallpaper = this.settings.wallpaper
+    const isVideo = wallpaper.startsWith('data:video/') || wallpaper.startsWith('idb:') || wallpaper.startsWith('fsa:')
+    const wallpaperLayer = document.querySelector<HTMLElement>('[data-dsh-aqua-wallpaper-layer]')
+    if (wallpaperLayer !== null) {
+      wallpaperLayer.dataset.background = this.settings.background
+      wallpaperLayer.dataset.media = isVideo ? 'video' : 'image'
+    }
+    // Mirror the wallpaper state onto <html> so the stylesheet can scope
+    // video-mode readability rules (bubble plates) without touching the app.
+    const wallpaperOn = this.settings.background === 'wallpaper' && wallpaper !== ''
+    document.documentElement.toggleAttribute('data-dsh-aqua-wallpaper', wallpaperOn)
+    if (wallpaperOn) {
+      document.documentElement.setAttribute('data-dsh-aqua-media', isVideo ? 'video' : 'image')
+    } else {
+      document.documentElement.removeAttribute('data-dsh-aqua-media')
+    }
     const img = document.querySelector<HTMLImageElement>('[data-dsh-aqua-wallpaper-img]')
     if (img !== null) {
-      if (this.settings.background === 'wallpaper' && this.settings.wallpaper !== '') {
-        img.src = this.settings.wallpaper
+      if (this.settings.background === 'wallpaper' && wallpaper !== '' && !isVideo) {
+        img.src = wallpaper
       } else {
         img.removeAttribute('src')
       }
     }
+    const video = document.querySelector<HTMLVideoElement>('[data-dsh-aqua-wallpaper-video]')
+    if (video !== null) {
+      if (this.settings.background === 'wallpaper' && isVideo) {
+        if (wallpaper.startsWith('idb:')) {
+          const id = wallpaper.slice(4)
+          if (this.videoBlobId === id && this.videoObjectUrl !== undefined) {
+            // Already mounted — never reload/revoke on repeated applySettings
+            // runs (knob tweaks would otherwise restart the video).
+          } else {
+            void loadVideoBlob(id).then((blob) => {
+              if (blob === null) return
+              if (this.settings.wallpaper !== wallpaper) return // stale load
+              const url = URL.createObjectURL(blob)
+              if (this.videoObjectUrl !== undefined) URL.revokeObjectURL(this.videoObjectUrl)
+              this.videoObjectUrl = url
+              this.videoBlobId = id
+              video.setAttribute('src', url)
+              this.configureWallpaperVideo(video)
+            })
+          }
+        } else if (wallpaper.startsWith('fsa:')) {
+          if (this.videoBlobId === wallpaper && this.videoObjectUrl !== undefined) {
+            // Already mounted — knob tweaks must not reload the file.
+          } else {
+            void loadVideoHandle().then(async (handle) => {
+              if (handle === null) return
+              if (this.settings.wallpaper !== wallpaper) return // stale load
+              try {
+                // The browser remembers the file authorization; only a live
+                // grant lets us re-read the original file automatically.
+                const permission = await handle.queryPermission({ mode: 'read' })
+                if (permission !== 'granted') return // re-authorize on 选择视频 click
+                const file = await handle.getFile()
+                const url = URL.createObjectURL(file)
+                if (this.videoObjectUrl !== undefined) URL.revokeObjectURL(this.videoObjectUrl)
+                this.videoObjectUrl = url
+                this.videoBlobId = wallpaper
+                video.setAttribute('src', url)
+                this.configureWallpaperVideo(video)
+              } catch {
+                /* file moved/deleted or access revoked — stays empty until re-picked */
+              }
+            })
+          }
+        } else if (video.getAttribute('src') !== wallpaper) {
+          video.setAttribute('src', wallpaper)
+          this.configureWallpaperVideo(video)
+        }
+      } else {
+        video.pause()
+        video.removeAttribute('src')
+        video.load()
+      }
+    }
+  }
+
+  /** The wallpaper plays as a plain <video> element (the browser's own
+   *  decoder, no player chrome at all): looping on, cover fill via CSS, and
+   *  autoplay with a muted fallback where policy requires it. A direct
+   *  element (not an iframe) keeps backdrop-filter working over it, so the
+   *  glass panels stay frosted above the video. */
+  private configureWallpaperVideo(video: HTMLVideoElement): void {
+    video.loop = true
+    if (!video.paused) return
+    void video.play().catch(() => {
+      // Autoplay policy blocked unmuted playback — mute and retry.
+      video.muted = true
+      void video.play().catch(() => { /* ignore */ })
+    })
   }
 
   /** Apply the mode's token layer (floating palette, or translucent compat). */
@@ -649,7 +948,9 @@ export class AquaLayer {
     this.applyTokens()
     this.mountFluid()
     this.startSeamStamper()
+    this.startSpotlightFeed()
     this.syncWhale()
+    this.syncMesh()
   }
 
   /** Mount or drop the particle whale to match enabled + the whale flag. */
@@ -665,14 +966,40 @@ export class AquaLayer {
     }
   }
 
+  /** Mount or drop the interactive mesh to match enabled + the mesh flag. */
+  private syncMesh(): void {
+    if (this.enabled && this.settings.mesh) {
+      if (this.meshHandle !== undefined) return
+      const ambient = document.querySelector<HTMLElement>('[data-dsh-aqua-ambient]')
+      if (ambient === null) return
+      this.meshHandle = mountMesh(ambient)
+    } else {
+      this.meshHandle?.dispose()
+      this.meshHandle = undefined
+    }
+  }
+
   private unmount(): void {
     document.documentElement.removeAttribute(AQUA_ATTRIBUTE)
     document.documentElement.removeAttribute('data-dsh-float')
     document.documentElement.removeAttribute('data-dsh-compat')
+    document.documentElement.removeAttribute('data-dsh-aqua-wallpaper')
+    document.documentElement.removeAttribute('data-dsh-aqua-media')
+    document.documentElement.removeAttribute(SPOTLIGHT_ATTRIBUTE)
+    document.documentElement.removeAttribute(PRESS_ATTRIBUTE)
+    this.spotlightDisposer?.()
+    this.spotlightDisposer = undefined
     this.whaleHandle?.dispose()
     this.whaleHandle = undefined
+    this.meshHandle?.dispose()
+    this.meshHandle = undefined
     this.tokenDisposer?.()
     this.tokenDisposer = undefined
+    if (this.videoObjectUrl !== undefined) {
+      URL.revokeObjectURL(this.videoObjectUrl)
+      this.videoObjectUrl = undefined
+      this.videoBlobId = undefined
+    }
     this.teardownFluid()
     removeAmbientScene()
     removePageFades()
@@ -709,7 +1036,9 @@ export class AquaLayer {
   }
 
   private fluidParams(): FluidParams {
-    return FLUID_PALETTES[activeScheme()]
+    // Continuous hue + depth drive the palette through HSL interpolation —
+    // the depth lives in the colors, so the canvas needs no global filter.
+    return { ...SITE_FLUID_PARAMS, ...fluidToneColors(this.dark, this.settings.fluidHue, this.settings.fluidDepth) }
   }
 
   private applyFluidPalettes(): void {
@@ -720,5 +1049,11 @@ export class AquaLayer {
   private startSeamStamper(): void {
     if (this.seamDisposer !== undefined) return
     this.seamDisposer = startSeamStamper()
+  }
+
+  /** Attach the cursor-spotlight pointer feeds (idempotent per mount). */
+  private startSpotlightFeed(): void {
+    if (this.spotlightDisposer !== undefined) return
+    this.spotlightDisposer = startSpotlight()
   }
 }
