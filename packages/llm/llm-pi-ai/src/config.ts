@@ -21,7 +21,7 @@ import type { CredentialRef } from '@deepseek-ai/dsh-credentials'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
 import type { ResolvedRetryPolicy, RetryPolicyConfig } from '@deepseek-ai/dsh-llm'
-import { MODALITIES, resolveRouteModels, SUPPORTED_THINKING_FORMATS, THINKING_LEVELS } from './catalog.ts'
+import { MODALITIES, catalogDisplayName, resolveRouteModels, SUPPORTED_THINKING_FORMATS, THINKING_LEVELS } from './catalog.ts'
 import type {
   PiAiCompatProfile,
   PiAiModality,
@@ -65,7 +65,10 @@ export type {
 export interface PiAiProviderProfile {
   /** Credential reference (environment-variable name) resolved per request through `ctx.credentials`. */
   apiKeyEnv?: string
-  /** Name shown by configuration surfaces; defaults to the route key. */
+  /**
+   * Name shown by configuration surfaces; defaults to the route key, or its
+   * catalog display name for the renamed Zhipu routes.
+   */
   displayName?: string
   /**
    * Wire protocol every model on this route speaks. Omission keeps each
@@ -335,7 +338,10 @@ export function resolveProfiles(
     // The route key, not the installed provider's own name: the directory has
     // always shown route keys, and a catalog route must not silently rename
     // itself on every configuration surface just because it gained a profile.
-    const displayName = source.displayName ?? provider
+    // The renamed Zhipu routes are the one exception — their keys would not
+    // let a Chinese-language surface find them — so their display names come
+    // from the same table the directory uses.
+    const displayName = source.displayName ?? catalogDisplayName(provider)
     const catalog = resolveRouteModels({
       provider,
       ...source.api === undefined ? {} : { api: source.api },

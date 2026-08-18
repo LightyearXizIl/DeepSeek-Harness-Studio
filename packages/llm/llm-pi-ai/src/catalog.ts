@@ -162,6 +162,27 @@ export function catalogProviderTakesApiKey(provider: string): boolean {
 }
 
 /**
+ * Display names for catalog routes whose route key would not let a
+ * Chinese-language configuration surface find the vendor. Every other route
+ * keeps its key; a profile's explicit `displayName` still wins everywhere.
+ */
+const ROUTE_DISPLAY_NAMES: Readonly<Record<string, string>> = {
+  zai: '智谱 Z.AI（国际）',
+  'zai-coding-cn': '智谱 GLM Coding Plan（国内）',
+}
+
+/**
+ * The display name one catalog route shows on configuration surfaces before a
+ * profile names one. The directory has always shown route keys, so this is
+ * the route key for every route the table does not rename.
+ * @param provider - provider route key.
+ * @returns the route's default display name.
+ */
+export function catalogDisplayName(provider: string): string {
+  return ROUTE_DISPLAY_NAMES[provider] ?? provider
+}
+
+/**
  * The installed catalog models for one route, indexed by model id.
  * @param provider - provider route key.
  * @returns catalog models by id; empty for a route pi-ai does not ship.

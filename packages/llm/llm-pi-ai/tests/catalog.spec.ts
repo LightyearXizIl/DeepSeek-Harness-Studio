@@ -396,6 +396,16 @@ describe('hand-declared providers', () => {
     expect(resolved.get('acme-gateway')?.displayName).toBe('acme-gateway')
     expect(() => resolveProfiles({ 'acme-gateway': { displayName: '' } })).toThrow(/empty displayName/)
   })
+
+  it('names the Zhipu routes for Chinese-language surfaces when no displayName is configured', () => {
+    expect(resolveProfiles({ zai: { apiKeyEnv: KEY_ENV } }).get('zai')?.displayName)
+      .toBe('智谱 Z.AI（国际）')
+    expect(resolveProfiles({ 'zai-coding-cn': { apiKeyEnv: KEY_ENV } }).get('zai-coding-cn')?.displayName)
+      .toBe('智谱 GLM Coding Plan（国内）')
+    // An explicit displayName still wins over the catalog name.
+    expect(resolveProfiles({ zai: { apiKeyEnv: KEY_ENV, displayName: 'Z.AI' } }).get('zai')?.displayName)
+      .toBe('Z.AI')
+  })
 })
 
 describe('catalog routes with per-model configuration', () => {
@@ -932,6 +942,16 @@ describe('configurable-provider directory', () => {
 
     await ctx.settings.replace(settingsNamespace('llm-pi-ai'), {})
     expect(ctx.llm.listConfigurableProviders()).toHaveLength(catalogOnly)
+  })
+
+  it('names dormant Zhipu catalog entries for Chinese-language surfaces', async () => {
+    const ctx = await harness({})
+    const entries = ctx.llm.listConfigurableProviders()
+    expect(entries.find(entry => entry.provider === 'zai')?.displayName).toBe('智谱 Z.AI（国际）')
+    expect(entries.find(entry => entry.provider === 'zai-coding-cn')?.displayName)
+      .toBe('智谱 GLM Coding Plan（国内）')
+    // Every other catalog route keeps its route key.
+    expect(entries.find(entry => entry.provider === 'deepseek')?.displayName).toBe('deepseek')
   })
 
   it('withholds a catalog route this adapter cannot authenticate', async () => {

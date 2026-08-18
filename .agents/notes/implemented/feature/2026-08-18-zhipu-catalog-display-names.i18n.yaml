@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-18-zhipu-catalog-display-names.md
+2026-08-18-zhipu-catalog-display-names.md: 55f104d6066bb326ec6bda7e420db7f922335ee3
+2026-08-18-zhipu-catalog-display-names.zh.md: 072e78c6bc2a454404b4d37a108143fd9d715e5b

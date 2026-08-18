@@ -61,7 +61,7 @@ import { assertUsableApiKey, LlmError } from '@deepseek-ai/dsh-llm'
 import type { AdapterRegistrationHandle, DirectoryRegistrationHandle, LlmConfigurableProvider } from '@deepseek-ai/dsh-llm'
 import { deepEqualJson, installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { PiAiAdapter } from './adapter.ts'
-import { catalogProviderIds, catalogProviderTakesApiKey } from './catalog.ts'
+import { catalogDisplayName, catalogProviderIds, catalogProviderTakesApiKey } from './catalog.ts'
 import { assertServiceable, Config, resolveProfiles } from './config.ts'
 import type { ResolvedPiAiProviderProfile } from './config.ts'
 import { discoverModels } from './discovery.ts'
@@ -138,9 +138,10 @@ function directoryEntries(
   // to authenticate with, so offering it would put a card on the settings page
   // whose own posture — no key, credentials discovered by the provider — fails
   // every request. Catalog *membership* is unaffected, so `declare` above still
-  // answers what pi-ai ships.
+  // answers what pi-ai ships. Dormant catalog entries show their catalog
+  // display name, so the Zhipu routes are findable before any profile exists.
   for (const provider of catalog) {
-    if (catalogProviderTakesApiKey(provider)) declare(provider, provider)
+    if (catalogProviderTakesApiKey(provider)) declare(provider, catalogDisplayName(provider))
   }
   for (const [provider, profile] of profiles) declare(provider, profile.displayName)
   return [...entries.values()]
