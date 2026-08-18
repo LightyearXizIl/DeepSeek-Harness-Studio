@@ -14,11 +14,11 @@ describe('desktop Electron directory picker', () => {
     expect(main).toContain("properties: ['openDirectory']")
   })
 
-  it('keeps only the client surface and removes the crashing Host worker', async () => {
-    const desktopPatch = await readFile('build/dsh-desktop.patch.yml', 'utf8')
+  it('keeps the native Host worker and the renderless client surface', async () => {
+    const desktopPatch = await readFile('build/deepseek-harness-studio.patch.yml', 'utf8')
 
+    expect(desktopPatch).toContain("name: '@deepseek-ai/dsh-host-directory-picker-native'")
     expect(desktopPatch).toContain("name: '@deepseek-ai/dsh-client-ui-directory-picker-native'")
-    expect(desktopPatch).not.toContain("name: '@deepseek-ai/dsh-host-directory-picker-native'")
   })
 
   it('captures the client bridge as a reproducible dependency patch', async () => {
