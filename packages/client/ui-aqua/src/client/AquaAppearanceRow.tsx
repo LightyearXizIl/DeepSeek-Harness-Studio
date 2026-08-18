@@ -105,10 +105,11 @@ export function AquaAppearanceRow(props: AquaAppearanceRowComponentProps) {
    *  file authorization, so later visits re-read the ORIGINAL file with no
    *  storage copy. Other browsers fall back to the plain file input. */
   const pickVideo = (): void => {
-    if (window.showOpenFilePicker !== undefined) {
+    const picker = window.showOpenFilePicker
+    if (picker !== undefined) {
       void (async () => {
         try {
-          const [handle] = await window.showOpenFilePicker({
+          const [handle] = await picker({
             multiple: false,
             types: [{ description: 'Video', accept: { 'video/*': ['.mp4', '.webm', '.ogg', '.mov', '.m4v', '.mkv'] } }],
           })

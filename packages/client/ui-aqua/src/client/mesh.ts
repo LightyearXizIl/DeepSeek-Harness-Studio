@@ -148,6 +148,7 @@ export function mountMesh(host: HTMLElement): MeshHandle {
       for (let rx = 0; rx < cols - 1; rx++) {
         const a = dots[ry * cols + rx]
         const b = dots[ry * cols + rx + 1]
+        if (a === undefined || b === undefined) continue
         const dx = b.x - a.x
         const dy = b.y - a.y
         const dist = Math.sqrt(dx * dx + dy * dy)
@@ -164,6 +165,7 @@ export function mountMesh(host: HTMLElement): MeshHandle {
       for (let rx = 0; rx < cols; rx++) {
         const a = dots[ry * cols + rx]
         const b = dots[(ry + 1) * cols + rx]
+        if (a === undefined || b === undefined) continue
         const dx = b.x - a.x
         const dy = b.y - a.y
         const dist = Math.sqrt(dx * dx + dy * dy)
@@ -210,6 +212,7 @@ export function mountMesh(host: HTMLElement): MeshHandle {
       for (let rx = 0; rx < cols - 1; rx++) {
         const a = dots[ry * cols + rx]
         const b = dots[ry * cols + rx + 1]
+        if (a === undefined || b === undefined) continue
         ctx.beginPath()
         ctx.moveTo(a.x + LINE_GAP, a.y)
         ctx.lineTo(b.x - LINE_GAP, b.y)
@@ -220,6 +223,7 @@ export function mountMesh(host: HTMLElement): MeshHandle {
       for (let rx = 0; rx < cols; rx++) {
         const a = dots[ry * cols + rx]
         const b = dots[(ry + 1) * cols + rx]
+        if (a === undefined || b === undefined) continue
         ctx.beginPath()
         ctx.moveTo(a.x, a.y + LINE_GAP)
         ctx.lineTo(b.x, b.y - LINE_GAP)
@@ -231,7 +235,7 @@ export function mountMesh(host: HTMLElement): MeshHandle {
   } else {
     raf = requestAnimationFrame(frame)
     const observer = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting
+      visible = entry?.isIntersecting ?? false
       if (visible) wake()
     }, { threshold: 0 })
     observer.observe(canvas)

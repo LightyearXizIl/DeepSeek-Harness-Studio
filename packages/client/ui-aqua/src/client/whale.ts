@@ -141,7 +141,7 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
     const data = octx.getImageData(0, 0, GRID, GRID).data
     const lum = new Float32Array(GRID * GRID)
     for (let i = 0; i < GRID * GRID; i++) {
-      lum[i] = (0.299 * data[4 * i] + 0.587 * data[4 * i + 1] + 0.114 * data[4 * i + 2]) / 255
+      lum[i] = (0.299 * (data[4 * i] ?? 0) + 0.587 * (data[4 * i + 1] ?? 0) + 0.114 * (data[4 * i + 2] ?? 0)) / 255
     }
     // Keep a pixel only when it is bright AND has at least one bright
     // 5×5-neighbor (the site's isolation filter: no lone bright specks).
@@ -152,14 +152,14 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
           const nx = x + dx
           const ny = y + dy
           if (nx < 0 || ny < 0 || nx >= GRID || ny >= GRID) continue
-          if (lum[ny * GRID + nx] > 0.2) return true
+          if ((lum[ny * GRID + nx] ?? 0) > 0.2) return true
         }
       }
       return false
     }
     for (let e = 0; e < GRID; e++) {
       for (let n = 0; n < GRID; n++) {
-        const a = lum[e * GRID + n]
+        const a = lum[e * GRID + n] ?? 0
         if (a <= 0.2 || !hasBrightNeighbor(n, e)) continue
         const x = (n - GRID / 2) * UNIT
         const y = (GRID / 2 - e) * UNIT
@@ -169,7 +169,7 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
             if (dx === 0 && dy === 0) continue
             const nx = n + dx
             const ny = e + dy
-            if (nx < 0 || ny < 0 || nx >= GRID || ny >= GRID || lum[ny * GRID + nx] <= 0.2) edge++
+            if (nx < 0 || ny < 0 || nx >= GRID || ny >= GRID || (lum[ny * GRID + nx] ?? 0) <= 0.2) edge++
           }
         }
         const phi = Math.random() * Math.PI * 2
@@ -205,6 +205,7 @@ export function mountWhale(host: HTMLElement, dark: boolean): WhaleHandle {
     const breathe = 0.15 * Math.sin(0.4 * time)
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i]
+      if (p === undefined) continue
       const loose = LOOSE * (0.25 + 0.75 * p.edge) * assembly
       // Idle jitter + slow drift (the site's uLoose block, 2D projection).
       let px = p.x + hash(i) * 0.05 * loose

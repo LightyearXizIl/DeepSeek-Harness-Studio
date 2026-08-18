@@ -21,6 +21,12 @@ declare global {
       types?: Array<{ description?: string, accept: Record<string, string[]> }>
     }) => Promise<FileSystemFileHandle[]>
   }
+  // The monorepo's TypeScript DOM lib predates the permission surface on
+  // File System Access handles; the browser implements it.
+  interface FileSystemFileHandle {
+    queryPermission(options?: { mode?: 'read' | 'readwrite' }): Promise<'granted' | 'denied' | 'prompt'>
+    requestPermission(options?: { mode?: 'read' | 'readwrite' }): Promise<'granted' | 'denied' | 'prompt'>
+  }
 }
 
 function openDb(): Promise<IDBDatabase> {
