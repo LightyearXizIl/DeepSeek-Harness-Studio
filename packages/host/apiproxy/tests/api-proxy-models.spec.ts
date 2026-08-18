@@ -203,7 +203,7 @@ describe('Web session model selection', () => {
     await ctx.fiber.dispose()
   })
 
-  it('refuses a text-only selection while durable or pending image content remains visible', async () => {
+  it('admits a text-only selection while durable or pending image content remains visible (vision bridge)', async () => {
     const { ctx, agent, sessionId } = await harness()
     registerTextOnly(ctx)
     const api = createApiProxy(ctx, {
@@ -217,9 +217,12 @@ describe('Web session model selection', () => {
     agent.session.append('user/message', {
       id: 'image-message', role: 'user', source: { kind: 'user' }, content: [image],
     } as never, { surfaceOp: 'append' })
+    // [dsh-vision-bridge] image admission is deferred to the llm adapter
+    // layer: the bridge describes images before they reach the model, so a
+    // text-only model selection stays legal while images remain visible.
     expect((await api.sessions.selectModel(request({
       sessionId, provider: 'text-only', model: 'plain',
-    }))).result).toMatchObject({ ok: false, error: { code: 'model-unavailable' } })
+    }))).result).toMatchObject({ ok: true, value: { selected: { provider: 'text-only', model: 'plain' } } })
 
     agent.session.append('user/message', {
       id: 'summary', role: 'user', source: { kind: 'plugin', plugin: 'compact' },
@@ -233,7 +236,7 @@ describe('Web session model selection', () => {
     } as never)
     expect((await api.sessions.selectModel(request({
       sessionId, provider: 'text-only', model: 'plain',
-    }))).result.ok).toBe(false)
+    }))).result.ok).toBe(true)
     ;(agent.inbox.nextTurn as UserMessage[]).length = 0
     expect(expectValue(await api.sessions.selectModel(request({
       sessionId, provider: 'text-only', model: 'plain',
