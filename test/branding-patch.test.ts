@@ -25,7 +25,7 @@ describe('DSH Desktop sidebar branding', () => {
 
   it('pairs the DSH logo with the original Harness wordmark in the expanded sidebar', async () => {
     const patch = await readFile(
-      path.join(projectRoot, 'patches', '@deepseek-ai+dsh-client-ui-sidebar+0.1.0-rc.6.patch'),
+      path.join(projectRoot, 'patches', '@deepseek-ai+dsh-client-ui-sidebar+0.1.0-rc.7.patch'),
       'utf8'
     )
 
@@ -50,12 +50,30 @@ describe('DSH Desktop sidebar branding', () => {
 
   it('uses an 80px macOS rail that clears the traffic lights', async () => {
     const patch = await readFile(
-      path.join(projectRoot, 'patches', '@deepseek-ai+dsh-client-ui-layout+0.1.0-rc.6.patch'),
+      path.join(projectRoot, 'patches', '@deepseek-ai+dsh-client-ui-layout+0.1.0-rc.7.patch'),
       'utf8'
     )
 
     expect(patch).toContain('navigator.userAgent.includes("Macintosh") ? 80 : 56')
     expect(patch).toContain('sidebar === 0 ? COLLAPSED_SIDEBAR_WIDTH')
+  })
+
+  it('provides a sidebar phone entry that follows expanded and connected state', async () => {
+    const patch = await readFile(
+      path.join(projectRoot, 'patches', '@deepseek-ai+dsh-client-ui-sidebar+0.1.0-rc.7.patch'),
+      'utf8'
+    )
+    const preload = await readFile(path.join(projectRoot, 'src', 'preload', 'index.ts'), 'utf8')
+    const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
+
+    expect(patch).toContain('data-dsh-sidebar-root')
+    expect(patch).toContain('data-dsh-sidebar-wide')
+    expect(patch).toContain('data-dsh-sidebar-footer')
+    expect(preload).toContain("button.hidden = !wide && !phoneConnected")
+    expect(preload).toContain("button.classList.toggle('is-connected', phoneConnected)")
+    expect(preload).toContain("ipcRenderer.invoke('mobile:open-pairing')")
+    expect(main).toContain("ipcMain.handle('mobile:open-pairing'")
+    expect(main).toContain("ipcMain.handle('mobile:status'")
   })
 
   it('installs the source logo into the Harness static frontend', async () => {
