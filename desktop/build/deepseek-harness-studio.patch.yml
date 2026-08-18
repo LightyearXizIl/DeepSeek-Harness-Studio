@@ -13,3 +13,17 @@
     # itself is running.
     - id: directory-picker-native-desktop-surface
       name: '@deepseek-ai/dsh-client-ui-directory-picker-native'
+
+    # DSH Desktop owns the fixed-target dsh-market installer and its lightweight
+    # settings entry. After dshmarket is installed and Harness restarts, the
+    # community plugin replaces the placeholder with its complete market UI.
+    - id: dsh-desktop-market-installer
+      name: dsh-desktop-market-installer
+
+# dsh-market normally offers to restart its own Node process after mutations.
+# The desktop shell has the real lifecycle authority, so keep that behavior off
+# whenever the optional plugin is present in the composed profile.
+- id: dsh-market
+  config:
+    profile: web
+    allowRestart: false
