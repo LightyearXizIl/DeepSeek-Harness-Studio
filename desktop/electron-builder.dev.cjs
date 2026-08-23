@@ -13,6 +13,7 @@ module.exports = {
     productName: 'DeepSeek Harness Studio Dev',
     studioChannel: 'development'
   },
+  artifactName: 'dsh-desktop-dev-${os}-${arch}.${ext}',
   nsis: {
     ...packageJson.build.nsis,
     artifactName: 'deepseek-harness-studio-${version}-dev-windows-${arch}-setup.${ext}'

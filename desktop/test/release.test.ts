@@ -5,13 +5,9 @@ import { describe, expect, it } from 'vitest'
 const projectRoot = path.resolve(import.meta.dirname, '..')
 
 const releaseAssets = [
-  'deepseek-harness-studio-${version}-mac-arm64',
-  'deepseek-harness-studio-${version}-mac-x64',
-  'deepseek-harness-studio-*-windows-x64-setup.exe',
-  'deepseek-harness-studio-*-mac-arm64.zip.blockmap',
-  'deepseek-harness-studio-*-mac-x64.zip.blockmap',
-  'deepseek-harness-studio-*-windows-x64-setup.exe.blockmap',
-  'dist-dev/deepseek-harness-studio-*-dev-windows-x64-setup.exe'
+  'dsh-desktop-mac-arm64.dmg',
+  'dsh-desktop-mac-x64.dmg',
+  'dsh-desktop-windows-x64-setup.exe'
 ]
 
 describe('GitHub release contract', () => {
@@ -34,14 +30,22 @@ describe('GitHub release contract', () => {
       packages: Record<string, { dev?: boolean; peer?: boolean }>
     }
 
+    // A lock location is a path, so nested installs read as
+    // `node_modules/<host>/node_modules/<name>`. Only the segment after the
+    // last `node_modules/` names the package: without that, a third-party peer
+    // that npm nested under a DSH package (rc.8 gives ui-trajectory its own
+    // React 19) reads as a DSH package and trips this guard.
+    const packageNameOf = (location: string): string =>
+      location.slice(location.lastIndexOf('node_modules/') + 'node_modules/'.length)
+
     const peerOnlyRuntimePackages = Object.entries(packageLock.packages)
       .filter(
         ([location, metadata]) =>
-          location.startsWith('node_modules/@deepseek-ai/') &&
+          packageNameOf(location).startsWith('@deepseek-ai/') &&
           metadata.peer === true &&
           metadata.dev !== true
       )
-      .map(([location]) => location.replace('node_modules/', ''))
+      .map(([location]) => packageNameOf(location))
 
     expect(peerOnlyRuntimePackages).toEqual([])
   })
@@ -59,9 +63,7 @@ describe('GitHub release contract', () => {
       }
     }
 
-    expect(packageJson.build.artifactName).toBe(
-      'deepseek-harness-studio-${version}-${os}-${arch}.${ext}'
-    )
+    expect(packageJson.build.artifactName).toBe('dsh-desktop-${os}-${arch}.${ext}')
     expect(packageJson.build.extraResources).toContainEqual({
       from: 'build/app-icon.png',
       to: 'icon.png'
@@ -71,11 +73,15 @@ describe('GitHub release contract', () => {
       to: 'splash.html'
     })
     expect(packageJson.build.extraResources).toContainEqual({
-      from: 'build/deepseek-harness-studio.patch.yml',
-      to: 'deepseek-harness-studio.patch.yml'
+      from: 'build/dsh-loader.gif',
+      to: 'dsh-loader.gif'
+    })
+    expect(packageJson.build.extraResources).toContainEqual({
+      from: 'build/dsh-desktop.patch.yml',
+      to: 'dsh-desktop.patch.yml'
     })
     expect(packageJson.build.nsis.artifactName).toBe(
-      'deepseek-harness-studio-${version}-windows-${arch}-setup.${ext}'
+      'dsh-desktop-windows-${arch}-setup.${ext}'
     )
     expect(packageJson.build.nsis.include).toBe('build/installer.nsh')
     expect(packageJson.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }])
@@ -95,22 +101,43 @@ describe('GitHub release contract', () => {
     expect(installer).toContain('${NSD_SetText} $DshDirectoryEdit $3')
   })
 
-  it('shows a packaged startup surface and pins the native directory picker plus the market installer', async () => {
+  it('shows a packaged startup surface and pins the Electron directory picker surface', async () => {
     const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
     const splash = await readFile(path.join(projectRoot, 'build', 'splash.html'), 'utf8')
     const patch = await readFile(
-      path.join(projectRoot, 'build', 'deepseek-harness-studio.patch.yml'),
+      path.join(projectRoot, 'build', 'dsh-desktop.patch.yml'),
       'utf8'
     )
 
     expect(main).toContain("desktopResourcePath('splash.html')")
     expect(main).toContain('await showSplash()')
-    expect(splash).toContain('Starting DeepSeek Harness Studio')
-    expect(splash).toContain('prefers-reduced-motion')
-    expect(patch).toMatch(/id: directory-picker\r?\n  disabled: true/)
-    expect(patch).toContain("name: '@deepseek-ai/dsh-host-directory-picker-native'")
-    expect(patch).toContain("name: '@deepseek-ai/dsh-client-ui-directory-picker-native'")
-    expect(patch).toContain('dsh-desktop-market-installer')
+    expect(splash).toContain('Starting DSH Desktop')
+    expect(splash).toContain('src="dsh-loader.gif"')
+    expect(splash).not.toContain('class="track"')
+    expect(patch).not.toMatch(/id:\s*directory-picker/)
+    expect(patch).not.toContain("name: '@deepseek-ai/dsh-host-directory-picker-native'")
+    expect(patch).not.toContain("name: '@deepseek-ai/dsh-client-ui-directory-picker-native'")
+  })
+
+  it('routes manual restarts through the active plugin recovery flow', async () => {
+    const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
+
+    expect(main).toContain("if (failureRecoveryVisible) resolvePluginRecoveryAction('restart')")
+    expect(main).toMatch(/case 'restart-harness':\s+await restartHarness\(\)/)
+    expect(main).toContain('click: () => void restartHarness().catch(showUnexpectedError)')
+    expect(main).toContain("} else if (action === 'restart') {")
+  })
+
+  it('replays frontend plugin failures that arrive during an active recovery', async () => {
+    const main = await readFile(path.join(projectRoot, 'src', 'main', 'index.ts'), 'utf8')
+
+    expect(main).toContain("resolvePluginRecoveryAction('refresh')")
+    expect(main).toContain('if (applyPendingFrontendEvidence()) continue')
+    expect(main).toMatch(
+      /if \(failureRecoveryVisible\) \{\s+queuePendingFrontendPluginRecovery\(message\)/
+    )
+    expect(main).toContain('queueMicrotask(() => {')
+    expect(main).toContain('logs: [...rendererPluginFailureLogs]')
   })
 
   it('publishes update metadata for installed desktop builds', async () => {
@@ -130,7 +157,7 @@ describe('GitHub release contract', () => {
 
     expect(packageJson.dependencies['electron-updater']).toBeTruthy()
     expect(packageJson.build.publish).toEqual([
-      { provider: 'github', owner: 'LightyearXizIl', repo: 'DeepSeek-Harness-Studio' }
+      { provider: 'generic', url: 'https://dshdesktop.com/updates/latest/' }
     ])
     expect(packageJson.build.win.verifyUpdateCodeSignature).toBe(false)
     for (const asset of [
@@ -138,9 +165,9 @@ describe('GitHub release contract', () => {
       'latest-mac-x64.yml',
       'latest-mac.yml',
       'latest.yml',
-      'deepseek-harness-studio-*-mac-arm64.zip.blockmap',
-      'deepseek-harness-studio-*-mac-x64.zip.blockmap',
-      'deepseek-harness-studio-*-windows-x64-setup.exe.blockmap'
+      'dsh-desktop-mac-arm64.zip.blockmap',
+      'dsh-desktop-mac-x64.zip.blockmap',
+      'dsh-desktop-windows-x64-setup.exe.blockmap'
     ]) {
       expect(workflow).toContain(asset)
     }
@@ -156,7 +183,10 @@ describe('GitHub release contract', () => {
       'package:mac',
       'package:mac:arm64',
       'package:mac:x64',
-      'package:win'
+      'package:win',
+      'package:dev:mac:arm64',
+      'package:dev:mac:x64',
+      'package:dev:win'
     ]) {
       expect(packageJson.scripts[script]).toContain('--publish never')
     }
@@ -174,18 +204,25 @@ describe('GitHub release contract', () => {
 
     expect(packageJson.scripts['package:dev:dir']).toContain('npm run build')
     expect(packageJson.scripts['package:dev:dir']).toContain('electron-builder.dev.cjs')
+    expect(packageJson.scripts['package:dev:mac:arm64']).toContain('verify-target.mjs darwin arm64')
+    expect(packageJson.scripts['package:dev:mac:arm64']).toContain('electron-builder.dev.cjs')
+    expect(packageJson.scripts['package:dev:mac:x64']).toContain('verify-target.mjs darwin x64')
+    expect(packageJson.scripts['package:dev:mac:x64']).toContain('electron-builder.dev.cjs')
     expect(packageJson.scripts['package:dev:win']).toContain('verify-target.mjs win32 x64')
     expect(packageJson.scripts['package:dev:win']).toContain('electron-builder.dev.cjs')
     expect(packageJson.scripts['package:dev:win']).toContain('--publish never')
-    expect(developmentConfig).toContain("appId: 'io.deepseekharness.studio.dev'")
-    expect(developmentConfig).toContain("productName: 'DeepSeek Harness Studio Dev'")
+    expect(developmentConfig).toContain("appId: 'io.dsh.desktop.dev'")
+    expect(developmentConfig).toContain("productName: 'DSH Desktop Dev'")
     expect(developmentConfig).toContain("output: 'dist-dev'")
-    expect(developmentConfig).toContain("studioChannel: 'development'")
+    expect(developmentConfig).toContain("dshDesktopChannel: 'development'")
     expect(developmentConfig).toContain(
-      "artifactName: 'deepseek-harness-studio-${version}-dev-windows-${arch}-setup.${ext}'"
+      "artifactName: 'dsh-desktop-dev-${os}-${arch}.${ext}'"
     )
-    expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'deepseek-harness-studio-dev'))")
-    expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'deepseek-harness-studio'))")
+    expect(developmentConfig).toContain(
+      "artifactName: 'dsh-desktop-dev-windows-${arch}-setup.${ext}'"
+    )
+    expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop-dev'))")
+    expect(main).toContain("app.setPath('userData', join(app.getPath('appData'), 'dsh-desktop'))")
     expect(main).toContain('if (!developmentBuild)')
   })
 
@@ -200,7 +237,7 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('runs-on: windows-2022')
     expect(workflow).toContain('npm run package:dev:win')
     expect(workflow).toContain('Smoke test packaged Windows Harness')
-    expect(workflow).toContain("$executable = 'dist-dev\\win-unpacked\\DeepSeek Harness Studio Dev.exe'")
+    expect(workflow).toContain("$executable = 'dist-dev\\win-unpacked\\DSH Desktop Dev.exe'")
     expect(workflow).toContain('Packaged Windows Harness smoke test passed.')
     expect(workflow).toContain("Invoke-HarnessRpc 'workspace.create'")
     expect(workflow).toContain("Invoke-HarnessRpc 'session.create'")
@@ -210,7 +247,7 @@ describe('GitHub release contract', () => {
     expect(workflow).toContain('gh release create $env:PRERELEASE_TAG')
     expect(workflow).toContain('--prerelease')
     expect(workflow).toContain('name: windows-x64-dev')
-    expect(workflow).toContain('dist-dev/deepseek-harness-studio-*-dev-windows-x64-setup.exe')
+    expect(workflow).toContain('dist-dev/dsh-desktop-dev-windows-x64-setup.exe')
     for (const asset of releaseAssets) expect(workflow).toContain(asset)
     expect(
       workflow.match(
@@ -241,10 +278,13 @@ describe('GitHub release contract', () => {
     expect(workflow.match(/CSC_IDENTITY_AUTO_DISCOVERY: 'false'/g)).toHaveLength(2)
     expect(workflow).not.toContain("CSC_LINK: ''")
     expect(workflow).toMatch(
-      /macos-apple-silicon:\r?\n    name: macOS Apple Silicon\r?\n    runs-on: macos-15\r?\n    steps:/
+      /macos-apple-silicon:\r?\n\s+name: macOS Apple Silicon\r?\n(?:[\s\S]*?)runs-on: macos-15\r?\n\s+steps:/
     )
     expect(workflow).toMatch(
-      /macos-intel:\r?\n    name: macOS Intel\r?\n    if: [^\r\n]+\r?\n    runs-on: macos-15-intel\r?\n    steps:/
+      /macos-intel:\r?\n\s+name: macOS Intel\r?\n(?:[\s\S]*?)runs-on: macos-15-intel\r?\n\s+steps:/
+    )
+    expect(workflow).toMatch(
+      /windows-x64:\r?\n\s+name: Windows x64\r?\n(?:[\s\S]*?)runs-on: windows-2022\r?\n\s+steps:/
     )
   })
 
@@ -256,11 +296,12 @@ describe('GitHub release contract', () => {
     )
 
     for (const readme of readmes) {
-      expect(readme).toContain('https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases')
+      expect(readme).toContain('https://www.dshdesktop.com/#download')
       expect(readme).not.toContain('| Platform | Package | Download |')
       expect(readme).not.toContain('| 平台 | 安装包 | 下载 |')
       expect(readme).not.toContain('Coming soon')
       expect(readme).not.toContain('即将发布')
+      expect(readme).not.toContain('github.com/dataelement/dsh-desktop/releases')
       for (const asset of releaseAssets) {
         expect(readme).not.toContain(`releases/latest/download/${asset}`)
       }

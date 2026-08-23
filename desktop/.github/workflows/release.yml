@@ -9,6 +9,15 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      target:
+        description: Platform to build
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
       windows_prerelease_tag:
         description: Optional non-v tag for a Windows Dev pre-release
         required: false
@@ -24,9 +33,14 @@ concurrency:
 jobs:
   macos-apple-silicon:
     name: macOS Apple Silicon
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'macos'))
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -78,12 +92,13 @@ jobs:
         env:
           CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
         run: npm run package:mac:arm64
-      - name: Build unsigned Apple Silicon verification package
+      - name: Build isolated Apple Silicon development package
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npm run package:mac:arm64
+        run: npm run package:dev:mac:arm64
       - name: Preserve Apple Silicon update metadata
+        if: startsWith(github.ref, 'refs/tags/v')
         run: mv dist/latest-mac.yml dist/latest-mac-arm64.yml
       - name: Sign, notarize, and staple Apple Silicon DMG
         if: startsWith(github.ref, 'refs/tags/v')
@@ -132,6 +147,7 @@ jobs:
           spctl --assess --type open --context context:primary-signature --verbose=4 "dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
           xcrun stapler validate "dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
       - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: macos-apple-silicon
           path: |
@@ -140,13 +156,26 @@ jobs:
             dist/deepseek-harness-studio-*-mac-arm64.zip.blockmap
             dist/latest-mac-arm64.yml
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        with:
+          name: macos-apple-silicon-dev
+          path: |
+            dist-dev/dsh-desktop-dev-mac-arm64.dmg
+            dist-dev/dsh-desktop-dev-mac-arm64.zip
+            dist-dev/dsh-desktop-dev-mac-arm64.zip.blockmap
+          if-no-files-found: error
 
   macos-intel:
     name: macOS Intel
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'macos'))
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -198,12 +227,13 @@ jobs:
         env:
           CSC_KEYCHAIN: ${{ steps.signing_keychain.outputs.keychain }}
         run: npm run package:mac:x64
-      - name: Build unsigned Intel verification package
+      - name: Build isolated Intel development package
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npm run package:mac:x64
+        run: npm run package:dev:mac:x64
       - name: Preserve Intel update metadata
+        if: startsWith(github.ref, 'refs/tags/v')
         run: mv dist/latest-mac.yml dist/latest-mac-x64.yml
       - name: Sign, notarize, and staple Intel DMG
         if: startsWith(github.ref, 'refs/tags/v')
@@ -252,6 +282,7 @@ jobs:
           spctl --assess --type open --context context:primary-signature --verbose=4 "dist/deepseek-harness-studio-${version}-mac-x64.dmg"
           xcrun stapler validate "dist/deepseek-harness-studio-${version}-mac-x64.dmg"
       - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: macos-intel
           path: |
@@ -260,13 +291,27 @@ jobs:
             dist/deepseek-harness-studio-*-mac-x64.zip.blockmap
             dist/latest-mac-x64.yml
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        with:
+          name: macos-intel-dev
+          path: |
+            dist-dev/dsh-desktop-dev-mac-x64.dmg
+            dist-dev/dsh-desktop-dev-mac-x64.zip
+            dist-dev/dsh-desktop-dev-mac-x64.zip.blockmap
+          if-no-files-found: error
 
   windows-x64:
     name: Windows x64
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'windows' || inputs.target == '' || inputs.windows_prerelease_tag != ''))
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -281,10 +326,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: npm run package:win
       - name: Build isolated Windows development package
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: npm run package:dev:win
       - name: Smoke test packaged Windows Harness
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         shell: pwsh
         run: |
           $userData = Join-Path $env:APPDATA 'deepseek-harness-studio-dev'
@@ -399,7 +444,7 @@ jobs:
             dist/latest.yml
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'workflow_dispatch'
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           name: windows-x64-dev
           path: |
@@ -423,6 +468,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -483,3 +530,57 @@ jobs:
           )
           print(f"✅ Uploaded {src} -> {repo_id}/releases/latest")
           PY
+
+      - name: Build Feishu release note prompt
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p .github/release-artifacts
+          git fetch --force --tags
+          python3 .github/scripts/feishu_release_notes.py build-prompt \
+            --tag "$RELEASE_TAG" \
+            --output .github/release-artifacts/feishu-release-prompt.txt
+
+      - name: Generate bilingual Feishu release note
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.MODELS_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ -n "${COPILOT_GITHUB_TOKEN:-}" ]; then
+            echo "Generating release notes via Copilot CLI..."
+            npm install -g @github/copilot@latest || true
+            prompt="$(cat .github/release-artifacts/feishu-release-prompt.txt)"
+            if copilot -p "$prompt" -s --model gpt-5.6-terra --no-ask-user > .github/release-artifacts/feishu-release-notes.md 2>/dev/null && \
+               python3 .github/scripts/feishu_release_notes.py validate --tag "$RELEASE_TAG" --input .github/release-artifacts/feishu-release-notes.md; then
+              echo "✅ AI release notes generated and validated."
+            else
+              echo "⚠️ AI generation fell back to deterministic release note generator."
+              python3 .github/scripts/feishu_release_notes.py generate-fallback \
+                --tag "$RELEASE_TAG" \
+                --output .github/release-artifacts/feishu-release-notes.md
+            fi
+          else
+            echo "Generating release notes from git evidence..."
+            python3 .github/scripts/feishu_release_notes.py generate-fallback \
+              --tag "$RELEASE_TAG" \
+              --output .github/release-artifacts/feishu-release-notes.md
+          fi
+
+      - name: Send Feishu release success notification
+        if: success()
+        env:
+          FEISHU_RELEASE_WEBHOOK: ${{ secrets.FEISHU_RELEASE_WEBHOOK }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FEISHU_RELEASE_WEBHOOK:-}" ]; then
+            echo "⚠️ FEISHU_RELEASE_WEBHOOK secret not set; skipping notification."
+            exit 0
+          fi
+          python3 .github/scripts/feishu_release_notes.py send \
+            --tag "$RELEASE_TAG" \
+            --notes .github/release-artifacts/feishu-release-notes.md \
+            --webhook "$FEISHU_RELEASE_WEBHOOK"
+
