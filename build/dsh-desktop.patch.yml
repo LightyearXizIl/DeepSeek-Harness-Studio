@@ -1,13 +1,8 @@
-# DSH Desktop delegates directory selection to Electron's system dialog. Keep
-# the renderless client surface, but do not load the Koffi-based Host worker:
-# on Windows it can exit before reporting a result inside packaged Electron.
-- id: directory-picker
-  disabled: true
-
+# Keep the stock directory-picker (auto) row active: the native backend
+# serves ctx.directoryPicker, so host-side consumers (host.pickDirectory,
+# plugins reading the seam) work unmodified. The client surface keeps its
+# Electron-dialog bridge via the client-ui patch in patches/.
 - insert:
-    - id: directory-picker-electron-desktop-surface
-      name: '@deepseek-ai/dsh-client-ui-directory-picker-native'
-
     # DSH Desktop owns the fixed-target dsh-market installer and its lightweight
     # settings entry. After dshmarket is installed and Harness restarts, the
     # community plugin replaces the placeholder with its complete market UI.
@@ -18,6 +13,17 @@
 # The desktop shell has the real lifecycle authority, so keep that behavior off
 # whenever the optional plugin is present in the composed profile.
 - id: dsh-market
+  inject: [desktopProfiles]
   config:
     profile: web
     allowRestart: false
+
+# Harness creates the full Cordis HMR service after boot when no `hmr` service
+# exists, and that service throws without Node's internal module loader —
+# which a packaged Electron app cannot provide, so every signed macOS launch
+# failed profile boot at that step. This row supplies the config-watching
+# subset `watchUserPatches` actually needs; where the internals are reachable
+# it stands aside and the real service loads unchanged.
+- insert:
+    - id: dsh-desktop-hmr-fallback
+      name: dsh-desktop-hmr-fallback
