@@ -4,6 +4,46 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.0.4] - 2026-08-23
+
+### 更新
+
+- **Harness 与 Desktop 上游同步**：Harness 升级到 `0.1.1-rc.2`，Desktop 合入 rc.2 对应
+  的上游补丁。Cordis vendor 继续严格跟随该固定基线，不单独追踪其他提交
+- **DeepSeek 原生图片模型**：官方 `deepseek-official / deepseek-v4-flash-vision-exp` 作为
+  图片输入入口。图片走上游附件规范化、Files API、文件 ID 复用、过期刷新、配额处理与
+  base64 降级链路，不再通过外部视觉模型转写后再请求 DeepSeek
+- **兼容依赖升级**：根 pnpm 工作区、Desktop npm、Python `uv.lock` 与 GitHub Actions
+  全部更新到当前兼容版本。Desktop 使用 Electron `43.4.1`、React `19.2.8`、Node
+  `26.7.0`、pnpm `11.22.0` 和 Zustand `5.0.15`
+- **构建与供应链固定**：GitHub Actions 改为固定完整提交 SHA；Desktop 每次安装继续自动
+  应用 rc.2 补丁，发布构建可复现
+
+### 修复
+
+- **Desktop 品牌与更新通道**：修复 Studio 品牌资源、开发用户目录和更新通道配置在 rc.2
+  Desktop 基线中的匹配关系
+- **配置和请求兼容性**：适配 js-yaml v5 的 ESM 导入与自定义 `!!js` 标签；空表达式明确报错，
+  避免把无效配置静默加载
+- **pi-ai 响应兼容性**：适配新增的模型目录字段和终止状态；取消请求保持为稳定的取消结果，
+  不泄漏密钥或图片内容
+- **React 19 类型兼容性**：修正 UI ref 与组件返回类型，保留现有界面行为和用户数据路径
+
+### 不包含的功能
+
+- **独立“DeepSeek 视觉桥接”插件尚未实现**。本版本没有把第三方视觉服务写入官方
+  DeepSeek 适配器，也没有恢复旧的内嵌桥接补丁
+- **官方视觉模型尚未完成真实 API 验收**。当前没有 `DEEPSEEK_API_KEY`，因此该项仍需
+  使用真实凭据完成图片上传与响应验证；无密钥测试不能替代它
+
+### 已知限制
+
+- TypeScript 保持 `6.0.3`，因为 TypeScript 7 不满足仓库现有 peer 约束；网站保持
+  Vite 5，因为 VitePress `1.6.4` 仍依赖该工具链
+- 本地 Windows 验证已覆盖安装、类型检查、247 项 Desktop 测试和生产构建。全仓库覆盖率、
+  快照与文档总门禁仍被既有 Aqua 文档、Windows 缺少 `bash` 和回放夹具问题阻断，未以重录
+  或跳过的方式掩盖
+
 ## [0.0.3] - 2026-08-18
 
 ### 更新
@@ -74,4 +114,5 @@
 - 首次发布为 Windows x64；macOS 构建已配置，待发布验证
 
 [0.0.3]: https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases/tag/v0.0.3
+[0.0.4]: https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases/tag/v0.0.4
 [0.0.1]: https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases/tag/v0.0.1
