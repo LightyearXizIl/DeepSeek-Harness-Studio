@@ -1,72 +1,82 @@
-# DeepSeek Harness Studio 交接文档
+# DeepSeek Harness Studio Handover
 
-本文件记录当前可运行状态和维护边界；改动 `packages/` 前先阅读根目录 `AGENTS.md` 与 [架构说明](architecture.md)。
+English | [中文](HANDOVER.zh.md)
 
-## 项目状态
+This document records the runnable state and maintenance limits. Read the root `AGENTS.md` and the [architecture](architecture.md) before changing `packages/`.
 
-DeepSeek Harness Studio 由官方 Harness 核心、Desktop 壳层、Aqua 主题和 Studio 更新页组成。
+## Project status
 
-官方 `deepseek-official / deepseek-v4-flash-vision-exp` 是图片输入的唯一已交付入口，使用上游附件规范化与 Files API 链路。
+DeepSeek Harness Studio consists of the official Harness core, the Desktop shell, the Aqua theme, and the Studio update page.
 
-旧的内嵌视觉桥接已移除，`desktop/patches/@deepseek-ai+dsh-llm-deepseek+0.1.0-rc.7.patch` 不再存在。
+The official `deepseek-official / deepseek-v4-flash-vision-exp` is the only delivered image-input entry point. It uses upstream attachment normalization and the Files API flow.
 
-独立的 `@deepseek-ai/dsh-llm-vision-bridge` 插件尚未实现，因此不得把任意第三方视觉服务视为已配置或已验收的功能。
+The embedded vision bridge has been removed, and `desktop/patches/@deepseek-ai+dsh-llm-deepseek+0.1.0-rc.7.patch` is absent.
 
-## 目录与所有权
+The standalone `@deepseek-ai/dsh-llm-vision-bridge` plugin is not implemented. Do not treat any third-party vision service as configured or accepted.
 
-| 路径 | 所有权与用途 |
+Windows x64 version `v0.0.4` is released. Its release page, installer, blockmap, and `latest.yml` are available from [GitHub Release v0.0.4](https://github.com/LightyearXizIl/DeepSeek-Harness-Studio/releases/tag/v0.0.4).
+
+## Layout and ownership
+
+| Path | Ownership and purpose |
 | --- | --- |
-| `packages/`、`apps/`、`vendor/` | Harness pnpm 工作区；Cordis vendor 仅按 Harness 固定版本同步。 |
-| `desktop/` | 独立 npm 项目；消费已发布的 Harness rc.2 包。 |
-| `desktop/build/deepseek-harness-studio.patch.yml` | Desktop 的上游组合层。 |
-| `desktop/build/dsh-local.patch.yml` | Studio 本地组合层，注册 Aqua 与 Studio 更新页。 |
-| `packages/client/ui-aqua/`、`desktop/vendor/@deepseek-ai/dsh-client-ui-aqua/` | Aqua 的工作区和 Desktop 打包副本，改动时必须同步。 |
-| `scripts/sync/UPDATE-SUMMARY.md` | 每次上游同步的事实记录。 |
+| `packages/`, `apps/`, `vendor/` | Harness pnpm workspace; Cordis vendor sources follow only the Harness-pinned version. |
+| `desktop/` | Standalone npm project consuming published Harness rc.2 packages. |
+| `desktop/build/deepseek-harness-studio.patch.yml` | Desktop upstream composition layer. |
+| `desktop/build/dsh-local.patch.yml` | Studio-local composition layer that registers Aqua and the Studio update page. |
+| `packages/client/ui-aqua/`, `desktop/vendor/@deepseek-ai/dsh-client-ui-aqua/` | Aqua workspace and Desktop packaged copy; update both together. |
+| `scripts/sync/UPDATE-SUMMARY.md` | Factual record for each upstream sync. |
 
-## 上游基线
+## Upstream baselines
 
-Harness 已同步到 `upstream/master` 的 `b150a551b8`（`dsh-v0.1.1-rc.2`）。
+Harness is synchronized to `b150a551b8` from `upstream/master` (`dsh-v0.1.1-rc.2`).
 
-Desktop 已同步到 `desktop-upstream/chore/harness-rc2` 的 `9957aff5bf`，其依赖固定为 Harness rc.2。
+Desktop is synchronized to `9957aff5bf` from `desktop-upstream/chore/harness-rc2`, and its dependencies are pinned to Harness rc.2.
 
-Aqua 不属于本次上游同步；候选上游改为 AGPL 后，本地 MIT 副本保持不变，等待许可证选择再更新。
+Aqua is outside this upstream sync. Its candidate upstream changed to AGPL, so the local MIT copy remains unchanged until a license decision permits an update.
 
-## 依赖策略
+## Dependency policy
 
-根 pnpm、Desktop npm、Python `uv.lock` 和 GitHub Actions 已完成兼容升级。
+The root pnpm workspace, Desktop npm project, Python `uv.lock`, and GitHub Actions have compatible dependency upgrades.
 
-根仓库与 Desktop 使用 TypeScript `6.0.3`：TypeScript 7 不满足仓库的 `<7` peer 约束及 `tsconfck` 的 TypeScript 5 peer 范围。
+The root repository and Desktop use TypeScript `6.0.3`: TypeScript 7 violates the repository's `<7` peer constraint and `tsconfck`'s TypeScript 5 peer range.
 
-网站直接依赖保持 Vite 5，因为 VitePress `1.6.4` 消费 Vite 5；升级到 Vite 8 会产生两套不兼容的 Vite 类型。
+The website keeps Vite 5 because VitePress `1.6.4` consumes Vite 5. Upgrading to Vite 8 would produce two incompatible Vite type sets.
 
-Desktop 使用 Electron `43.4.1`、React `19.2.8`、Node `26.7.0`、pnpm `11.22.0` 和 Zustand `5.0.15`。
+Desktop uses Electron `43.4.1`, React `19.2.8`, Node `26.7.0`, pnpm `11.22.0`, and Zustand `5.0.15`.
 
-所有 GitHub Actions 均固定到完整提交 SHA；Actions 升级必须继续保持此固定方式。
+Every GitHub Action is pinned to a full commit SHA; future Action upgrades must keep that pinning method.
 
-Desktop 中由 rc.2 替代的旧视觉桥接补丁已删除，其余 rc.2 补丁须在安装后由 `patch-package` 成功应用。
+Desktop removes the obsolete vision-bridge patch replaced by rc.2. `patch-package` must apply every remaining rc.2 patch after installation.
 
-## Studio 本地约定
+## Studio-local conventions
 
-产品名、用户数据目录、GitHub 更新源、Aqua 和 `dsh-local.patch.yml` 属于 Studio 本地行为，Desktop 同步时不得以官方默认值覆盖。
+The product name, user-data path, GitHub update source, Aqua, and `dsh-local.patch.yml` are Studio-local behavior. Desktop synchronization must not overwrite them with upstream defaults.
 
-侧栏静态资源使用 `deepseek-harness-studio-logo-*.png`；Desktop 启动代码、静态资源安装脚本和 rc.2 侧栏补丁必须使用同一名称。
+Sidebar assets use `deepseek-harness-studio-logo-*.png`; Desktop startup code, the asset installation script, and the rc.2 sidebar patch must use the same names.
 
-开发构建使用 `studioChannel: 'development'` 及独立的 `deepseek-harness-studio-dev` 用户数据目录。
+Development builds use `studioChannel: 'development'` and the separate `deepseek-harness-studio-dev` user-data directory.
 
-## 已完成验证
+## Completed verification
 
-- 根仓库：`pnpm install --offline`、`pnpm peers check`、`pnpm run typecheck`、pi-ai 聚焦测试和 `git diff --check` 通过。
-- Python：独立临时环境中的 `uv sync --project python/sdk --group test` 与 `uv run --project python/sdk pytest` 通过（52 passed、10 skipped）。
-- Desktop：npm 安装和全部 rc.2 补丁应用通过，Electron `43.4.1` 二进制可运行，`npm run typecheck`、`npm test`（247 passed）和 `npm run build` 通过。
+- Root repository: `pnpm install --offline`, `pnpm peers check`, `pnpm run typecheck`, focused pi-ai tests, and `git diff --check` pass.
+- Python: `uv sync --project python/sdk --group test` and `uv run --project python/sdk pytest` pass in an isolated temporary environment (52 passed, 10 skipped).
+- Desktop: npm installation and every rc.2 patch application pass; the Electron `43.4.1` binary runs; `npm run typecheck`, `npm test` (247 passed), and `npm run build` pass.
+- Release: tag `v0.0.4` and `master` both point to `31bd254538e0c985f7358e59d6b7ada03e83136e`. The Windows x64 NSIS installer was built, and silent installation and removal created and cleared the application, uninstaller, and matching uninstall registry entry.
+- Remote assets: installer `deepseek-harness-studio-0.0.4-windows-x64-setup.exe` is `159277487` bytes with SHA-256 `4ed5dfc04d031ef37c05f9cd670ae4ba1b3fd7b1bec28357cfaf7ae4d0708e2d`. The GitHub Release installer, blockmap, and `latest.yml` are all `uploaded`, with matching local sizes and SHA-256 values.
 
-官方新视觉模型尚无 `DEEPSEEK_API_KEY` 的真实 API 验收；无密钥覆盖不能替代该项验证。
+The official new vision model has no real API acceptance without `DEEPSEEK_API_KEY`; keyless coverage does not substitute for it.
 
-尚未进行安装包构建、发布、打标签或推送。
+The installer has no code-signing certificate, so Windows can show an unknown-publisher prompt.
 
-## 后续操作
+`test:coverage`, `test:snapshot`, `doc-sync`, and `duplication` have no all-green evidence. Coverage stalled in a CLI isolated test; snapshot tests lack Windows `bash` and executable CLI tools; documentation sync reports Aqua JSDoc, README limitation, and existing bilingual-pair issues; duplication reports four existing Aqua clone groups.
 
-继续依赖升级前先运行 `pnpm outdated -r --format json` 与 `npm outdated --json`，并记录任何受引擎、peer 或上游 rc.2 固定版本限制的候选版本。
+## Follow-up work
 
-同步上游后先更新 `scripts/sync/UPDATE-SUMMARY.md`，再运行与改动范围匹配的根仓库、Desktop 和 Python 检查。
+Before another dependency upgrade, run `pnpm outdated -r --format json` and `npm outdated --json`, then record candidates limited by engine, peer, or upstream rc.2 version pins.
 
-实现独立视觉桥接前，先完成插件的持久会话事件、图片描述复用、候选路由降级和无密钥快照；不要恢复旧的官方适配器内嵌桥接。
+After an upstream sync, update `scripts/sync/UPDATE-SUMMARY.md` first, then run root, Desktop, and Python checks that match the changed area.
+
+Before implementing the standalone vision bridge, add its durable session event, image-description reuse, candidate-route fallback, and keyless snapshots. Do not restore the embedded bridge in the official adapter.
+
+After a release, manually accept the Windows installer model selection, image upload, Aqua settings, and Studio update entry. Before accepting the official vision model, configure `DEEPSEEK_API_KEY` and record API results and error handling in the corresponding tests or Agent Note.
