@@ -27,9 +27,9 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@types/react": "~18.3.1",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@types/react": "~19.2.18"
   },
   "files": [
     "lib/index.js",
@@ -37,7 +37,7 @@
     "lib/types/**/*.d.ts"
   ],
   "peerDependencies": {
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-invariants": "workspace:^"
   }
 }

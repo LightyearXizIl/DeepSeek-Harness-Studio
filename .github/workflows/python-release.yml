@@ -43,15 +43,15 @@ jobs:
       matrix:
         python: ['3.10', '3.14']
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v6.3.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: ${{ matrix.python }}
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           pattern: deepseek_harness_*
           path: dist
@@ -86,11 +86,11 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@v6.3.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: '3.10'
 
@@ -137,7 +137,7 @@ jobs:
             }
           fi
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           pattern: deepseek_harness_*
           path: dist
@@ -176,7 +176,7 @@ jobs:
           sha256sum *.whl | sort -k2 > SHA256SUMS
           cat SHA256SUMS
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: python-release-${{ steps.version.outputs.version }}
           path: dist/*
@@ -194,7 +194,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: python-release-${{ needs.validate.outputs.version }}
           path: dist
@@ -208,7 +208,7 @@ jobs:
           mv dist/deepseek_harness_runtime_bin-*.whl dist/runtime/
 
       - name: Publish runtime wheels
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
         with:
           packages-dir: dist/runtime/
           # Public attestations reveal the private publisher repository. OIDC
@@ -229,7 +229,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: python-release-${{ needs.validate.outputs.version }}
           path: dist
@@ -243,7 +243,7 @@ jobs:
           mv dist/deepseek_harness_sdk-*.whl dist/sdk/
 
       - name: Publish SDK wheel
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
         with:
           packages-dir: dist/sdk/
           attestations: false

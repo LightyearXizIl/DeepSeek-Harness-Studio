@@ -92,14 +92,15 @@ export type PiAiThinkingFormat = NonNullable<OpenAICompletionsCompat['thinkingFo
  * key type is a drift gate: a pi-ai upgrade that adds a format (0.84 added
  * `baseten`) fails compilation here until the new format is named, so the
  * offer never silently lags the upstream set. The two `chat-template` variants
- * are nameable because {@link PiAiCompatProfile.chatTemplateKwargs} carries
- * the kwargs they dispatch through.
+ * and `baseten` are nameable because {@link PiAiCompatProfile.chatTemplateKwargs}
+ * and {@link PiAiCompatProfile.chatTemplateArgs} carry the values they dispatch.
  */
 const THINKING_FORMAT_GATE: Record<PiAiThinkingFormat, true> = {
   'openai': true,
   'deepseek': true,
   'openrouter': true,
   'together': true,
+  'baseten': true,
   'zai': true,
   'qwen': true,
   'chat-template': true,
@@ -235,6 +236,7 @@ const COMPLETIONS_COMPAT_GATE = {
   supportsDeveloperRole: 'offer',
   supportsReasoningEffort: 'offer',
   supportsUsageInStreaming: 'offer',
+  supportsFinishReason: 'offer',
   maxTokensField: 'offer',
   requiresToolResultName: 'offer',
   requiresAssistantAfterToolResult: 'offer',
@@ -242,6 +244,8 @@ const COMPLETIONS_COMPAT_GATE = {
   requiresReasoningContentOnAssistantMessages: 'offer',
   thinkingFormat: 'offer',
   chatTemplateKwargs: 'offer',
+  chatTemplateArgs: 'offer',
+  supportsThinkingTokenBudget: 'offer',
   supportsStrictMode: 'offer',
   cacheControlFormat: 'offer',
   supportsLongCacheRetention: 'offer',
@@ -258,6 +262,7 @@ const COMPLETIONS_COMPAT_GATE = {
 const RESPONSES_COMPAT_GATE = {
   supportsDeveloperRole: 'offer',
   supportsStrictMode: 'offer',
+  supportsAdditionalTools: 'offer',
   supportsLongCacheRetention: 'offer',
   sessionAffinityFormat: 'withhold',
   supportsOpenAIGrammarTools: 'withhold',
@@ -362,6 +367,8 @@ export interface PiAiCompatProfile {
   supportsReasoningEffort?: boolean
   /** Whether the endpoint accepts `stream_options: {include_usage: true}`; `openai-completions`. */
   supportsUsageInStreaming?: boolean
+  /** Whether streamed responses include `finish_reason`; `openai-completions`. */
+  supportsFinishReason?: boolean
   /** Which output-cap field the endpoint reads; `openai-completions`. */
   maxTokensField?: NonNullable<OpenAICompletionsCompat['maxTokensField']>
   /** Whether tool results must carry `name`; `openai-completions`. */
@@ -382,11 +389,17 @@ export interface PiAiCompatProfile {
    * can read, so kwargs set beside another format are sent nowhere.
    */
   chatTemplateKwargs?: NonNullable<OpenAICompletionsCompat['chatTemplateKwargs']>
+  /** Arguments sent as `chat_template_args` by the `baseten` thinking format; `openai-completions`. */
+  chatTemplateArgs?: NonNullable<OpenAICompletionsCompat['chatTemplateArgs']>
+  /** Whether the endpoint accepts a `thinking_token_budget`; `openai-completions`. */
+  supportsThinkingTokenBudget?: boolean
   /**
    * Whether the endpoint accepts `strict` in tool definitions;
    * `openai-completions`, the three Responses protocols, `bedrock-converse-stream`.
    */
   supportsStrictMode?: boolean
+  /** Whether the endpoint accepts message-anchored `additional_tools`; the three Responses protocols. */
+  supportsAdditionalTools?: boolean
   /** Prompt-cache marker convention; `openai-completions`. */
   cacheControlFormat?: NonNullable<OpenAICompletionsCompat['cacheControlFormat']>
   /**

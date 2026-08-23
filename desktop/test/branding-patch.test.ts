@@ -30,8 +30,8 @@ describe('DeepSeek Harness Studio sidebar branding', () => {
       'utf8'
     )
 
-    expect(patch).toContain('StudioLogo')
-    expect(patch).toContain('StudioBrand')
+    expect(patch).toContain('DshDesktopLogo')
+    expect(patch).toContain('DshDesktopBrand')
     expect(patch).toContain('BrandWordmark')
     expect(patch).toContain('/deepseek-harness-studio-logo-light.png')
     expect(patch).toContain('/deepseek-harness-studio-logo-dark.png')
@@ -45,8 +45,8 @@ describe('DeepSeek Harness Studio sidebar branding', () => {
     expect(patch).toContain('padding-top:32px')
     expect(patch).toContain('navigator.userAgent.includes("Macintosh")')
     expect(patch).toContain('.hHd-Xa_root.hHd-Xa_collapsed{padding:46px 22px 6px}')
-    expect(patch).toContain('body[data-ds-dark-theme] .studioLogoLight')
-    expect(patch).toContain('body[data-ds-dark-theme] .studioLogoDark')
+    expect(patch).toContain('body[data-ds-dark-theme] .dshDesktopLogoLight')
+    expect(patch).toContain('body[data-ds-dark-theme] .dshDesktopLogoDark')
   })
 
   it('uses an 80px macOS rail that clears the traffic lights', async () => {

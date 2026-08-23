@@ -27,7 +27,7 @@ describe('desktop Electron directory picker', () => {
   })
 
   it('keeps the stock picker composition: the seam comes from the stock auto row', async () => {
-    const desktopPatch = await readFile('build/dsh-desktop.patch.yml', 'utf8')
+    const desktopPatch = await readFile('build/deepseek-harness-studio.patch.yml', 'utf8')
 
     // No picker rows at all - the stock auto row mounts the native backend.
     expect(desktopPatch).not.toMatch(/id:\s*directory-picker/)

@@ -37,6 +37,6 @@
   "dependencies": {
     "@deepseek-ai/cosmokit": "workspace:^",
     "@deepseek-ai/schemastery": "workspace:^",
-    "supports-color": "^9.4.0"
+    "supports-color": "^11.0.0"
   }
 }

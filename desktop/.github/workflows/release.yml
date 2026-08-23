@@ -38,10 +38,10 @@ jobs:
       (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'macos'))
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
           cache: npm
@@ -146,7 +146,7 @@ jobs:
           codesign --verify --verbose=2 "dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
           spctl --assess --type open --context context:primary-signature --verbose=4 "dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
           xcrun stapler validate "dist/deepseek-harness-studio-${version}-mac-arm64.dmg"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: macos-apple-silicon
@@ -156,14 +156,14 @@ jobs:
             dist/deepseek-harness-studio-*-mac-arm64.zip.blockmap
             dist/latest-mac-arm64.yml
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           name: macos-apple-silicon-dev
           path: |
-            dist-dev/dsh-desktop-dev-mac-arm64.dmg
-            dist-dev/dsh-desktop-dev-mac-arm64.zip
-            dist-dev/dsh-desktop-dev-mac-arm64.zip.blockmap
+            dist-dev/deepseek-harness-studio-*-dev-mac-arm64.dmg
+            dist-dev/deepseek-harness-studio-*-dev-mac-arm64.zip
+            dist-dev/deepseek-harness-studio-*-dev-mac-arm64.zip.blockmap
           if-no-files-found: error
 
   macos-intel:
@@ -173,10 +173,10 @@ jobs:
       (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'macos'))
     runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
           cache: npm
@@ -281,7 +281,7 @@ jobs:
           codesign --verify --verbose=2 "dist/deepseek-harness-studio-${version}-mac-x64.dmg"
           spctl --assess --type open --context context:primary-signature --verbose=4 "dist/deepseek-harness-studio-${version}-mac-x64.dmg"
           xcrun stapler validate "dist/deepseek-harness-studio-${version}-mac-x64.dmg"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: macos-intel
@@ -291,14 +291,14 @@ jobs:
             dist/deepseek-harness-studio-*-mac-x64.zip.blockmap
             dist/latest-mac-x64.yml
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           name: macos-intel-dev
           path: |
-            dist-dev/dsh-desktop-dev-mac-x64.dmg
-            dist-dev/dsh-desktop-dev-mac-x64.zip
-            dist-dev/dsh-desktop-dev-mac-x64.zip.blockmap
+            dist-dev/deepseek-harness-studio-*-dev-mac-x64.dmg
+            dist-dev/deepseek-harness-studio-*-dev-mac-x64.zip
+            dist-dev/deepseek-harness-studio-*-dev-mac-x64.zip.blockmap
           if-no-files-found: error
 
   windows-x64:
@@ -309,10 +309,10 @@ jobs:
       (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'windows' || inputs.target == '' || inputs.windows_prerelease_tag != ''))
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
           cache: npm
@@ -434,7 +434,7 @@ jobs:
             --title 'DeepSeek Harness Studio Windows Harness Test' `
             --notes "Windows x64 development build for validating the Harness startup fix from PR #39. This build uses an isolated app identity and user data directory, and has passed the packaged Windows Harness smoke test." `
             "$($setup.FullName)#DeepSeek Harness Studio Dev Windows x64 Setup"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: windows-x64
@@ -443,7 +443,7 @@ jobs:
             dist/deepseek-harness-studio-*-windows-x64-setup.exe.blockmap
             dist/latest.yml
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           name: windows-x64-dev
@@ -467,15 +467,15 @@ jobs:
       - windows-x64
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           path: release-assets
           merge-multiple: true
@@ -583,4 +583,3 @@ jobs:
             --tag "$RELEASE_TAG" \
             --notes .github/release-artifacts/feishu-release-notes.md \
             --webhook "$FEISHU_RELEASE_WEBHOOK"
-

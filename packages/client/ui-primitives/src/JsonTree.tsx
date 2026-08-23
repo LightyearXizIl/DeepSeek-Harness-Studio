@@ -427,10 +427,10 @@ export function JsonTree({
       : pathId([Array.isArray(data) ? firstExpandableIndex : firstExpandableEntry[0]])
     : isExpandableValue(data) && rootEntries.length > 0 ? pathId([]) : null
   const rootRef = useRef<HTMLDivElement>(null)
-  const activeRowRef = useRef<HTMLElement>()
+  const activeRowRef = useRef<HTMLElement | undefined>(undefined)
   const copyButtonRef = useRef<HTMLButtonElement>(null)
   const copyMenuOpenRef = useRef(false)
-  const resetTimer = useRef<ReturnType<typeof setTimeout>>()
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [copyTarget, setCopyTarget] = useState<CopyTarget>()
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [copyMenuOpen, setCopyMenuOpen] = useState(false)

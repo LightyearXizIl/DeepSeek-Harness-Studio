@@ -755,9 +755,23 @@ describe('toStreamChunks', () => {
 
 describe('mapStopReason / mapUsage', () => {
   it.each([
+    ['pending', {
+      kind: 'error',
+      failure: {
+        message: 'pi-ai returned a pending response as a terminal event',
+        code: 'PI_AI_PENDING_RESPONSE',
+      },
+    }],
     ['stop', { kind: 'stop' }],
     ['length', { kind: 'max-tokens' }],
     ['toolUse', { kind: 'tool-calls' }],
+    ['deferred', {
+      kind: 'error',
+      failure: {
+        message: 'pi-ai returned a deferred response, which this provider cannot resume',
+        code: 'DEFERRED_RESPONSE_UNSUPPORTED',
+      },
+    }],
     ['aborted', { kind: 'aborted', failure: { message: 'pi-ai stream aborted', code: 'ABORTED' } }],
   ] as const)('maps %s', (stopReason, expected) => {
     expect(mapStopReason(assistant({ stopReason, content: [{ type: 'text', text: 'ok' }] }))).toEqual(expected)

@@ -947,7 +947,7 @@ for line in sys.stdin:
     (module_dir / "__init__.py").write_text(
         f"""
 def resolve_bundled_launch_args(mode=None):
-    return ({str(runtime)!r},)
+    return ({sys.executable!r}, {str(runtime)!r})
 
 
 def bundled_default_config_path():

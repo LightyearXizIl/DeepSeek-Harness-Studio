@@ -164,8 +164,8 @@ function isDevelopmentBuild(): boolean {
   try {
     const metadata = JSON.parse(
       readFileSync(join(app.getAppPath(), 'package.json'), 'utf8')
-    ) as { dshDesktopChannel?: unknown }
-    return metadata.dshDesktopChannel === 'development'
+    ) as { studioChannel?: unknown }
+    return metadata.studioChannel === 'development'
   } catch {
     return false
   }
@@ -215,10 +215,10 @@ async function syncNativeTheme(window: BrowserWindow): Promise<void> {
   const isDark = await window.webContents.executeJavaScript(
     `(() => {
       if (${process.platform === 'darwin'}) {
-        let dragRegion = document.getElementById('dsh-desktop-drag-region')
+        let dragRegion = document.getElementById('deepseek-harness-studio-drag-region')
         if (!dragRegion) {
           dragRegion = document.createElement('div')
-          dragRegion.id = 'dsh-desktop-drag-region'
+          dragRegion.id = 'deepseek-harness-studio-drag-region'
           dragRegion.setAttribute('aria-hidden', 'true')
           Object.assign(dragRegion.style, {
             position: 'fixed',
@@ -312,7 +312,7 @@ function dshBrandLogoPath(variant: 'light' | 'dark'): string {
     '@deepseek-ai',
     'dsh-web-frontend',
     'dist',
-    `dsh-desktop-logo-${variant}.png`
+    `deepseek-harness-studio-logo-${variant}.png`
   )
 }
 

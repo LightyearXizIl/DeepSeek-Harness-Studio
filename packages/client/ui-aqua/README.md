@@ -4,14 +4,6 @@ English | [中文](README.zh.md)
 
 DSH-Transparent-UI-Plugin is a highly customizable glassmorphism theme for the DeepSeek Harness web UI. The header, sidebar, composer, stats line, and trajectory view all become panes of frosted glass. Switch it off and the stock UI comes back exactly, with no source changes to DSH itself.
 
-![](assets/1.png)
-
-![](assets/2.png)
-
-![](assets/3.png)
-
-![](assets/4.png)
-
 ## Features
 
 - **Two modes**: **Mica** restyles the layout into floating glass cards (blur and frost adjustable), while **Compatibility Mode** keeps the stock layout byte-for-byte and only swaps the material to generic glass — other plugins' UI gets the same treatment automatically

@@ -6,12 +6,10 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import * as yaml from 'js-yaml'
 
-const JsExpr = new yaml.Type('tag:yaml.org,2002:js', {
-  kind: 'scalar',
-  resolve: (data) => typeof data === 'string',
-  construct: (data) => ({ __jsExpr: data }),
-  predicate: isJsExpr,
-  represent: (data) => data['__jsExpr'],
+const JsExpr = yaml.defineScalarTag('tag:yaml.org,2002:js', {
+  resolve: (data) => data === '' ? yaml.NOT_RESOLVED : ({ __jsExpr: data }),
+  identify: isJsExpr,
+  represent: (data) => data.__jsExpr,
 })
 
 /**
@@ -20,7 +18,7 @@ const JsExpr = new yaml.Type('tag:yaml.org,2002:js', {
  * (`dsh --dump-config`) parses and prints exactly the dialect this include
  * mounts.
  */
-export const entryListSchema = yaml.JSON_SCHEMA.extend(JsExpr)
+export const entryListSchema = yaml.JSON_SCHEMA.withTags(JsExpr)
 
 const schema = entryListSchema
 

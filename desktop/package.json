@@ -66,25 +66,26 @@
     "dsh-desktop-hmr-fallback": "file:packages/dsh-desktop-hmr-fallback",
     "dsh-desktop-market-installer": "file:packages/dsh-desktop-market-installer",
     "electron-updater": "^6.8.9",
-    "node": "24.9.0",
-    "pnpm": "10.34.5",
+    "node": "26.7.0",
+    "pnpm": "11.22.0",
     "qrcode": "^1.5.4",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@types/node": "24.10.1",
+    "@types/node": "26.2.0",
     "@types/qrcode": "^1.5.6",
-    "electron": "43.4.0",
+    "electron": "43.4.1",
     "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
     "patch-package": "^8.0.1",
-    "typescript": "5.9.3",
-    "vitest": "^4.1.10",
+    "typescript": "6.0.3",
+    "vitest": "^4.1.11",
     "yaml": "^2.8.3"
   },
   "overrides": {
-    "koffi": "3.1.5"
+    "koffi": "3.1.5",
+    "zustand": "5.0.15"
   },
   "build": {
     "appId": "io.deepseekharness.studio",

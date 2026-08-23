@@ -45,7 +45,7 @@
     }
   },
   "dependencies": {
-    "@standard-schema/spec": "^1.1.0",
-    "@deepseek-ai/cosmokit": "workspace:^"
+    "@deepseek-ai/cosmokit": "workspace:^",
+    "@standard-schema/spec": "^1.1.0"
   }
 }

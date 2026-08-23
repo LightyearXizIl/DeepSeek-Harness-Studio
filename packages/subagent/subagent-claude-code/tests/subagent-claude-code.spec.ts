@@ -897,14 +897,14 @@ describe('query options and result mapping', () => {
         message: 'enter SECRET_TOKEN',
         requestedSchema: { secret: true },
       },
-      { signal: callbackSignal },
+      { signal: callbackSignal, requestId: 'request-2' },
     )).resolves.toEqual({ action: 'decline' })
     await expect(options.onUserDialog!(
       {
         dialogKind: 'refusal_fallback_prompt',
         payload: { path: '/private/secret.txt', token: 'SECRET_TOKEN' },
       },
-      { signal: callbackSignal },
+      { signal: callbackSignal, requestId: 'request-3' },
     )).resolves.toEqual({ behavior: 'cancelled' })
     expect(diagnostics).toEqual([
       'Claude Code unattended decision (mode: acceptEdits; request: tool permission; decision: denied): the provider does not request human approval',

@@ -41,19 +41,19 @@
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis-plugin-timer": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/cordis-plugin-timer": "workspace:^"
   },
   "dependencies": {
-    "@babel/code-frame": "^7.29.0",
-    "chokidar": "^4.0.3",
+    "@babel/code-frame": "^8.0.0",
     "@deepseek-ai/cosmokit": "workspace:^",
-    "picomatch": "^4.0.3",
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@deepseek-ai/schemastery": "workspace:^",
+    "chokidar": "^5.0.0",
+    "picomatch": "^4.0.5"
   },
   "devDependencies": {
     "@types/babel__code-frame": "^7.27.0",
-    "@types/picomatch": "^3.0.2",
-    "esbuild": "^0.28.1"
+    "@types/picomatch": "^4.0.3",
+    "esbuild": "^0.28.2"
   }
 }

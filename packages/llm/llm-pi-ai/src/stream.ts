@@ -89,6 +89,13 @@ export function mapStopReason(message: AssistantMessage, contextWindow?: number)
   }
 
   switch (message.stopReason) {
+    case 'pending': return {
+      kind: 'error',
+      failure: {
+        message: 'pi-ai returned a pending response as a terminal event',
+        code: 'PI_AI_PENDING_RESPONSE',
+      },
+    }
     case 'stop':
       // A terminal stop that produced no content blocks is a degenerate
       // provider completion, not a successful (empty) assistant message.
@@ -104,6 +111,13 @@ export function mapStopReason(message: AssistantMessage, contextWindow?: number)
       return { kind: 'stop' }
     case 'length': return { kind: 'max-tokens' }
     case 'toolUse': return { kind: 'tool-calls' }
+    case 'deferred': return {
+      kind: 'error',
+      failure: {
+        message: 'pi-ai returned a deferred response, which this provider cannot resume',
+        code: 'DEFERRED_RESPONSE_UNSUPPORTED',
+      },
+    }
     case 'aborted': return {
       kind: 'aborted',
       failure: { message: message.errorMessage ?? 'pi-ai stream aborted', code: 'ABORTED' },

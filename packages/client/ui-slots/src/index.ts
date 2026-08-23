@@ -13,7 +13,7 @@
  * in THIS compilation unit (so the intersection reads as `never`), but every
  * consumer merges keys in and the intersection is what keeps them string-typed.
  * The rule fires on the empty-map view, not on real redundancy. */
-import type { ReactNode } from 'react'
+import type { FunctionComponent, ReactNode } from 'react'
 import type { HostObservable } from './renderer.ts'
 import type { BoundActions, HandleOf, PropsStore, SnapshotSelectorHook, StoreDecl } from './store.ts'
 
@@ -367,7 +367,7 @@ export type PropsRenderSlots<S extends keyof SlotMap & string> = {
  * constraints check through clean parameter contravariance (FC statics add
  * covariant noise rejecting legitimate narrowings).
  */
-export type SlotComponent<P> = (props: P) => ReactNode
+export type SlotComponent<P> = (props: P) => ReturnType<FunctionComponent>
 
 /**
  * Registrant hooks compartment: bare observable sources (getSnapshot +

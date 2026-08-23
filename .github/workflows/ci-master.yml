@@ -47,7 +47,7 @@ jobs:
         id: wine-cache-key
         run: echo "key=wine-debs-${ImageOS:-linux}-${ImageVersion:-v0}" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
         id: wine-cache
         with:
           path: ~/wine-debs
@@ -81,15 +81,15 @@ jobs:
       # github.event.before, so full history is required: depth 2 would miss it
       # on multi-commit or force pushes; full fetch is cheap here because
       # checkout resolves against the VM's local mirror.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1
         with:
           dest: ${{ runner.temp }}/setup-pnpm
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
@@ -127,13 +127,13 @@ jobs:
     name: serial / macos
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1
         with:
           dest: ${{ runner.temp }}/setup-pnpm
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
@@ -166,7 +166,7 @@ jobs:
     runs-on: [self-hosted, dsh-win-ci, windows]
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Enable Developer Mode (symlink support)
         shell: pwsh
@@ -174,11 +174,11 @@ jobs:
           reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
           /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1
         with:
           dest: ${{ runner.temp }}/setup-pnpm
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
@@ -260,15 +260,15 @@ jobs:
             runner: dsh-windows-2025-96core
             workload: production-site
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1
         with:
           dest: ${{ runner.temp }}/setup-pnpm
 
       # The benchmark's Windows lanes deliberately skip the store cache like
       # the independent native Windows job; an empty input disables caching.
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache: ${{ matrix.platform == 'linux' && 'pnpm' || '' }}
@@ -351,15 +351,15 @@ jobs:
             runner: dsh-windows-2025-96core
             workers: '2'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1
         with:
           dest: ${{ runner.temp }}/setup-pnpm
 
       # Unlike the larger-runner suite, both platforms cache the store here:
       # the consolidated topology measures cache mechanics as workload.
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache: pnpm

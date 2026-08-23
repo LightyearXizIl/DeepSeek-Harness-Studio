@@ -128,6 +128,17 @@ function profileOptions(
   }
 }
 
+/** Preserve caller cancellation when pi-ai reports its already-aborted stream as an error event. */
+function callerAbortedFinish(): StreamChunk {
+  return {
+    type: 'finish',
+    reason: {
+      kind: 'aborted',
+      failure: { message: 'pi-ai request aborted by caller', code: 'ABORTED' },
+    },
+  }
+}
+
 /**
  * The profile default this exact model can actually take, for DESCRIBING it.
  * A configured level the model does not support yields none rather than
@@ -333,6 +344,10 @@ export class PiAiAdapter extends LlmAdapter {
     // the one it started with and the next call picks up the new one.
     const profile = this.profileOf(snapshot, options.provider)
     const model = this.modelOf(snapshot, options.provider, options.model)
+    if (options.signal?.aborted) {
+      yield callerAbortedFinish()
+      return
+    }
     const reasoning = resolveReasoningLevel(
       model,
       options.reasoningEffort ?? profile.reasoning,
@@ -383,6 +398,10 @@ export class PiAiAdapter extends LlmAdapter {
           if (timeout !== undefined) throw timeout
           if (result.done) {
             exhausted = true
+            return
+          }
+          if (options.signal?.aborted) {
+            yield callerAbortedFinish()
             return
           }
           yield result.value

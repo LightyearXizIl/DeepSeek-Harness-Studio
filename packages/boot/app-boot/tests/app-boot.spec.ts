@@ -535,7 +535,7 @@ describe('loadOverlayPatches', () => {
     expect(() => loadOverlayPatches(NAME, join(dir, 'missing.yml'))).toThrow(`${NAME}: failed to read overlay`)
     const malformed = join(dir, 'malformed.yml')
     writeFileSync(malformed, ': bad')
-    expect(() => loadOverlayPatches(NAME, malformed)).toThrow(`${NAME}: failed to parse overlay`)
+    expect(() => loadOverlayPatches(NAME, malformed)).toThrow('must be a top-level YAML array')
     const mapping = join(dir, 'mapping.yml')
     writeFileSync(mapping, 'id: target\n')
     expect(() => loadOverlayPatches(NAME, mapping)).toThrow('must be a top-level YAML array')

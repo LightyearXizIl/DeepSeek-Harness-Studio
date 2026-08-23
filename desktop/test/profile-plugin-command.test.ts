@@ -60,12 +60,18 @@ describe('profile-plugin-command', () => {
     )
 
     expect(result).toEqual({ ok: true })
-    expect(JSON.parse(await readFile(reportPath, 'utf8'))).toEqual({
+    const report = JSON.parse(await readFile(reportPath, 'utf8')) as {
+      argv: string[]
+      dshHome: string
+      pnpmStatus: number
+      pnpmVersion: string
+    }
+    expect(report).toMatchObject({
       argv: ['plugin', '--profile', 'web', 'remove', '@example/plugin'],
       dshHome: testDir,
-      pnpmVersion: '10.34.5',
       pnpmStatus: 0
     })
+    expect(report.pnpmVersion).toMatch(/^11\.\d+\.\d+$/)
   })
 })
 
