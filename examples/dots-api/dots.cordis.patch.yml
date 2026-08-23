@@ -1,0 +1,26 @@
+# Patch overlay for the shipped headless profile: swap the native DeepSeek
+# adapter for the dormant pi-ai twin carrying the dots route, and re-pin the
+# default model. Run with:
+#   pnpm dsh --profile headless --patch examples/dots-api/dots.cordis.patch.yml "<task>"
+
+- id: llm-deepseek
+  disabled: true
+
+- id: llm-pi-ai
+  config:
+    providers:
+      dots:
+        displayName: Dots API
+        apiKeyEnv: DOTS_API_KEY
+        api: openai-completions
+        baseURL: https://note3-prev-api.askdiandian.com/v1
+        models:
+          - id: dots3-note-prev
+            name: Dots 3 Note (prev)
+            contextWindow: 524288
+            input: [text, image]
+
+- id: agent-default-model
+  config:
+    provider: dots
+    model: dots3-note-prev

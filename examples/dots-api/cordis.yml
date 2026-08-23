@@ -1,0 +1,73 @@
+# One headless agent turn on the Dots API open platform through a hand-declared
+# llm-pi-ai route. The platform's OpenAI-compatible /v1/chat/completions speaks
+# the protocol the adapter already dispatches, so the adaptation is this
+# configuration rather than a new adapter package. No key is inlined: the
+# adapter resolves DOTS_API_KEY per request from the credential store, and a
+# request without one fails loud with MISSING_CREDENTIAL (what the keyless
+# smoke pins).
+
+# User-settings document ($DSH_HOME/settings.yaml, hot-reloaded): an
+# `llm-pi-ai:` section there overrides the adapter entry below without a
+# restart, and is what the web Models page writes.
+- id: settings
+  name: '@deepseek-ai/dsh-settings-file'
+
+# Credential store: the live process environment over $DSH_HOME/.credentials.yaml.
+- id: credentials
+  name: '@deepseek-ai/dsh-credentials-local'
+
+# Hand-declared route: pi-ai ships no `dots` provider, so the profile spells out
+# the whole provider — protocol, endpoint, and catalog. The platform accepts the
+# Bearer auth pi-ai sends for openai-completions in addition to its documented
+# `api-key` header. Deep thinking stays at the platform default (enabled): the
+# route declares no reasoning efforts, so no reasoning parameter is sent.
+- id: llm-pi-ai
+  name: '@deepseek-ai/dsh-llm-pi-ai'
+  config:
+    providers:
+      dots:
+        displayName: Dots API
+        apiKeyEnv: DOTS_API_KEY
+        api: openai-completions
+        baseURL: https://note3-prev-api.askdiandian.com/v1
+        models:
+          - id: dots3-note-prev
+            name: Dots 3 Note (prev)
+            contextWindow: 524288
+            # The platform documents image, video, and audio URL blocks; the
+            # harness seam models text and image, so only those are claimed.
+            input: [text, image]
+
+- id: subprocess
+  name: '@deepseek-ai/dsh-subprocess-local'
+
+- id: bash
+  name: '@deepseek-ai/dsh-bash-local'
+  config:
+    timeoutMs: 60000
+
+# One fresh `main` agent on the dots route for the test driver.
+- id: agent-spine
+  name: '@deepseek-ai/dsh-agent-spine-demo'
+  config:
+    agents:
+      - id: main
+        provider: dots
+        model: dots3-note-prev
+        cwd: !!js process.cwd()
+    workspaceContext: false
+    dshHome: './.dsh-home'
+    skills:
+      filesystem:
+        agentsHome: './.agents-home'
+    persona: 'Dots API example agent. Answer briefly and factually.'
+
+# Durable image bytes behind the content-addressed references a vision request
+# carries; the route above claims image input, so this store backs it.
+- id: attachment-local
+  name: '@deepseek-ai/dsh-attachment-local'
+
+- id: persistence
+  name: '@deepseek-ai/dsh-session-persistence-jsonl'
+  config:
+    root: './.sessions'

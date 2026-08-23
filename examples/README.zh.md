@@ -12,6 +12,10 @@
 
 非交互式 agent（智能体）：接受一项任务并运行，然后以选定的机器可读或人类可读格式输出结果。详见[无头示例参考](headless-agent/README.md)。
 
+## dots-api
+
+以手工声明的 `llm-pi-ai` 路由接入 Dots API 开放平台（`dots3-note-prev`）：平台事实、headless profile 叠加层、settings 段变体，以及无密钥与真实模型测试。详见 [dots-api 示例参考](dots-api/README.md)。
+
 ## jsonrpc-agent
 
 由 Python SDK 和 JSON-RPC 驱动的无人值守编码 agent。详见 [JSON-RPC 示例参考](jsonrpc-agent/README.md)。

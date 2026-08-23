@@ -1,0 +1,7 @@
+{
+  "name": "dots-api-example",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Runnable demo: one headless agent turn on the Dots API open platform through a hand-declared llm-pi-ai route"
+}

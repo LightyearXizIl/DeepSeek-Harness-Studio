@@ -12,6 +12,10 @@ Optional overlays that connect supported third-party memory servers through the 
 
 A non-interactive agent that accepts one task, runs it, and emits a selected machine-readable or human-readable output format. See the [headless example reference](headless-agent/README.md).
 
+## dots-api
+
+The Dots API open platform (`dots3-note-prev`) as a hand-declared `llm-pi-ai` route: platform facts, a headless-profile patch overlay, a settings-section variant, and keyless plus live-model tests. See the [dots-api example reference](dots-api/README.md).
+
 ## jsonrpc-agent
 
 An unattended coding agent driven through the Python SDK and JSON-RPC. See the [JSON-RPC example reference](jsonrpc-agent/README.md).
