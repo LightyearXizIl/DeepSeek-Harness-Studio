@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
